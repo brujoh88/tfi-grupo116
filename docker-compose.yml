@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: turnos-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: turnos
+      POSTGRES_PASSWORD: turnos
+      POSTGRES_DB: turnos
+    ports:
+      - "5433:5432"
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+
+volumes:
+  datos-postgres:
