@@ -13,3 +13,70 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ---------------------------------------------------------------------------
+// Catálogo
+// ---------------------------------------------------------------------------
+
+model Salon {
+  id     Int    @id @default(autoincrement())
+  nombre String
+
+  servicios Servicio[]
+  extras    Extra[]
+  retiros   Retiro[]
+}
+
+model Servicio {
+  id              Int     @id @default(autoincrement())
+  nombre          String
+  precio          Int
+  duracionMinutos Int
+  activo          Boolean @default(true)
+
+  salonId Int
+  salon   Salon @relation(fields: [salonId], references: [id])
+
+  extras ServicioExtra[]
+
+  @@unique([salonId, nombre])
+}
+
+model Extra {
+  id              Int     @id @default(autoincrement())
+  nombre          String
+  precio          Int
+  duracionMinutos Int
+  activo          Boolean @default(true)
+
+  salonId Int
+  salon   Salon @relation(fields: [salonId], references: [id])
+
+  servicios ServicioExtra[]
+
+  @@unique([salonId, nombre])
+}
+
+model Retiro {
+  id              Int     @id @default(autoincrement())
+  nombre          String
+  precio          Int
+  duracionMinutos Int
+  activo          Boolean @default(true)
+
+  salonId Int
+  salon   Salon @relation(fields: [salonId], references: [id])
+
+  @@unique([salonId, nombre])
+}
+
+// Qué extra se puede sumar a qué servicio. Una fila por combinación permitida.
+model ServicioExtra {
+  servicioId Int
+  servicio   Servicio @relation(fields: [servicioId], references: [id])
+
+  extraId Int
+  extra   Extra @relation(fields: [extraId], references: [id])
+
+  @@id([servicioId, extraId])
+}
