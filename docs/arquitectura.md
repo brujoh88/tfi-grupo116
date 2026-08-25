@@ -84,6 +84,43 @@ pregunta:
 | `DisponibilidadModule` | ¿En qué horarios entra completo **este** turno armado? |
 | `ReservasModule` | Tomar el horario y garantizar que no se lo lleven dos |
 
+## Las tablas que existen hoy — el catálogo
+
+Migración `20260825133434_catalogo`. Cinco tablas:
+
+| Tabla | Qué guarda |
+|---|---|
+| `Salon` | El salón. En el MVP tiene una fila |
+| `Servicio` | Los servicios base, con precio y duración |
+| `Extra` | Los extras, con precio y duración. Cada uno una sola vez |
+| `Retiro` | Los retiros, con precio y duración |
+| `ServicioExtra` | Qué extra se puede sumar a qué servicio: una fila por combinación permitida |
+
+**Son tres tablas y no una con un campo `tipo` porque la base impide guardar un
+turno mal armado**: `servicioBaseId` apunta a `Servicio` y no puede apuntar a un
+retiro. Con una sola tabla, el retiro en el lugar del servicio base sería un
+estado que la base acepta. Es la regla 4 de más abajo.
+
+Qué garantiza cada restricción, y por qué está:
+
+| Restricción | Qué impide |
+|---|---|
+| `@@unique([salonId, nombre])` | Dos servicios con el mismo nombre **en el mismo salón**. El límite es del salón, no del sistema |
+| `@@id([servicioId, extraId])` | Cargar dos veces la misma combinación permitida |
+| `ON DELETE RESTRICT` | Borrar un salón que tenga catálogo colgando |
+| `activo Boolean` | Que sacar algo del catálogo rompa los turnos que ya lo usaron |
+
+**Convenciones del esquema:** el precio es `Int` en **pesos enteros** —el salón
+no cobra centavos— y la duración es `Int` en **minutos**. El `salonId` está desde
+la primera tabla porque el punto 2.3 de la propuesta declara que el diseño
+contempla otros salones aunque el módulo no se construya.
+
+**Límite conocido:** nada impide vincular un servicio del salón 1 con un extra
+del salón 2. La base verifica que ambos existan, no que sean del mismo salón. En
+el MVP hay un solo salón, así que el estado inválido no se puede construir. Se
+resuelve con claves foráneas compuestas que arrastren el `salonId`, junto con el
+mismo problema en `Turno`.
+
 ## Reglas que valen para todo el sistema
 
 1. **Una regla de negocio vive en un solo lugar.** Cuánto dura un turno armado o
