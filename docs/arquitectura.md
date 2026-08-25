@@ -26,7 +26,8 @@ graph TD
 
     subgraph API["API — NestJS"]
         Health["HealthModule<br/>¿está todo vivo?"]
-        Catalogo["CatalogoModule<br/>(previsto)"]
+        Catalogo["CatalogoModule<br/>qué se puede elegir"]
+        Salon["SalonModule<br/>de qué salón es el pedido"]
         Turnos["TurnosModule<br/>(previsto)"]
         Grilla["GrillaModule<br/>(previsto)"]
         Disp["DisponibilidadModule<br/>(previsto)"]
@@ -36,6 +37,7 @@ graph TD
 
     Health --> Prisma
     Catalogo --> Prisma
+    Catalogo --> Salon
     Turnos --> Catalogo
     Disp --> Turnos
     Disp --> Grilla
@@ -71,6 +73,34 @@ decidirlo por su cuenta.
 - **Para qué sirve de verdad**: es lo que el servicio de despliegue consulta
   para saber si la API está sana.
 
+### `SalonModule` — de qué salón es el pedido
+
+- **Qué ofrece**: `SalonActualService`, con un solo método: `id()`.
+- **De qué depende**: de `SALON_ID`, una variable de entorno. Si falta o no es un
+  entero positivo, **la aplicación no arranca**.
+- **Por qué existe**: es el **único lugar** que contesta esa pregunta. Hoy la
+  respuesta es constante —la API sirve a un salón y cuál lo fija el despliegue—;
+  el día que haya varios, el id va a salir del pedido y el cambio entra acá
+  adentro. Los módulos que lo consultan no se enteran.
+- **Qué no hace**: no consulta la base ni sabe qué es HTTP.
+
+Ver [`adr/003-el-salon-sale-del-entorno.md`](adr/003-el-salon-sale-del-entorno.md).
+
+### `CatalogoModule` — qué se puede elegir
+
+- **Qué responde**: `GET /catalogo` → los servicios activos, cada uno con los
+  extras compatibles que estén activos, y los retiros activos.
+- **De qué depende**: de `PrismaModule` y de `SalonModule`.
+- **Cómo trabaja**: filtra por el salón actual y por `activo`, ordena
+  alfabéticamente en la base, y **aplana la tabla de vínculo**: `ServicioExtra`
+  no se ve desde afuera.
+- **Es una sola llamada y no tres** (`/servicios`, `/servicios/:id/extras`,
+  `/retiros`) porque la pantalla de armado necesita el catálogo entero para
+  funcionar, y son decenas de filas que cambian poco.
+- **Lo que sale por HTTP está declarado** en `catalogo.types.ts`, no heredado del
+  tipo que genera Prisma: `salonId` y `activo` se quedan adentro. Publicar un
+  campo tiene que ser una decisión, no el efecto secundario de tocar una tabla.
+
 ## Los módulos previstos
 
 Salen del alcance del MVP (`propuesta.md`, punto 2.3). Cada uno responde **una**
@@ -78,7 +108,6 @@ pregunta:
 
 | Módulo | La pregunta que responde |
 |---|---|
-| `CatalogoModule` | ¿Qué servicios, extras y retiros hay, con qué precio y qué duración? |
 | `TurnosModule` | Dado lo que la clienta armó, ¿cuánto sale y cuánto dura? |
 | `GrillaModule` | ¿Qué horarios ofrece el salón ese día, contando lo que se abrió y lo que se cerró? |
 | `DisponibilidadModule` | ¿En qué horarios entra completo **este** turno armado? |
@@ -120,6 +149,20 @@ del salón 2. La base verifica que ambos existan, no que sean del mismo salón. 
 el MVP hay un solo salón, así que el estado inválido no se puede construir. Se
 resuelve con claves foráneas compuestas que arrastren el `salonId`, junto con el
 mismo problema en `Turno`.
+
+## Cómo se organizan las carpetas de la API
+
+**Una carpeta por módulo, con todo lo suyo adentro** — `src/catalogo/` tiene su
+`.module.ts`, su `.controller.ts`, su `.service.ts` y sus tipos. No hay carpetas
+por capa (`controllers/`, `services/`).
+
+Para agregar o entender una pieza se toca **una** carpeta, no tres. Es además lo
+que Nest impone. Se descartó la organización hexagonal (`dominio/`,
+`aplicacion/`, `infraestructura/`): es defendible, pero su beneficio —poder
+cambiar Prisma por otra cosa— resuelve un problema que este proyecto no tiene, y
+cuesta horas sobre un plan que ya está ajustado.
+
+Cierra lo que el ADR-001 dejó abierto.
 
 ## Reglas que valen para todo el sistema
 
