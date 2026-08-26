@@ -30,15 +30,9 @@ lo hiciera, dejarían de ser dos aplicaciones aunque las carpetas siguieran ahí
   el service tiene las reglas, Prisma accede a los datos.
 - **Sin capa de repositorio**: el service consulta Prisma directamente.
 
-Se descartó **hexagonal / clean architecture**: su beneficio es que el negocio no
-conozca la base de datos, y este sistema no va a cambiar de base — PostgreSQL es
-una decisión defendida en la propuesta, porque el invariante de *un horario, un
-turno* se apoya en una restricción de la base. Lo que sí va a cambiar son las
-reglas de negocio, y ahí hexagonal no ahorra nada: si el retiro pasa a sumar diez
-minutos extra, se toca el service de turnos con hexagonal y sin ella.
-
-El porqué completo, con las otras alternativas, está en
-[`adr/004-monolito-modular-por-dominio.md`](adr/004-monolito-modular-por-dominio.md).
+Se descartaron hexagonal, las capas globales, los microservicios y *serverless*.
+El porqué de cada una está en el
+[ADR-004](adr/004-monolito-modular-por-dominio.md).
 
 ## Reglas de dependencia entre módulos
 
@@ -53,10 +47,10 @@ prohibido**, que es lo que un dibujo no puede decir:
 | 4 | **La infraestructura no depende del negocio** | Que `PrismaModule` o `SalonModule` tengan que saber que existe el catálogo |
 
 **El caso que las justifica.** El armado del turno necesita los precios del
-catálogo. Puede pedírselos al catálogo (regla 1) o consultar la tabla `Servicio`
-por su cuenta. Lo segundo es más rápido de escribir y **rompe todo**: el día que
-el catálogo cambie qué considera disponible, el armado sigue con la regla vieja y
-nadie se entera hasta que una clienta reserva algo que no se ofrece.
+catálogo: puede pedírselos (regla 1) o consultar la tabla `Servicio` por su
+cuenta. Lo segundo es más rápido de escribir y rompe el día que el catálogo
+cambie qué considera disponible — el armado sigue con la regla vieja hasta que
+una clienta reserva algo que no se ofrece.
 
 **Cada tabla tiene un módulo dueño.** Es la contracara de la regla 2:
 
@@ -144,12 +138,11 @@ Ver [`adr/003-el-salon-sale-del-entorno.md`](adr/003-el-salon-sale-del-entorno.m
 - **Cómo trabaja**: filtra por el salón actual y por `activo`, ordena
   alfabéticamente en la base, y **aplana la tabla de vínculo**: `ServicioExtra`
   no se ve desde afuera.
-- **Es una sola llamada y no tres** (`/servicios`, `/servicios/:id/extras`,
-  `/retiros`) porque la pantalla de armado necesita el catálogo entero para
-  funcionar, y son decenas de filas que cambian poco.
+- **Es una sola llamada y no tres** porque la pantalla de armado necesita el
+  catálogo entero, y son decenas de filas que cambian poco.
 - **Lo que sale por HTTP está declarado** en `catalogo.types.ts`, no heredado del
-  tipo que genera Prisma: `salonId` y `activo` se quedan adentro. Publicar un
-  campo tiene que ser una decisión, no el efecto secundario de tocar una tabla.
+  tipo que genera Prisma: publicar un campo tiene que ser una decisión, no el
+  efecto secundario de tocar una tabla.
 
 ## Los módulos previstos
 
@@ -177,8 +170,8 @@ Migración `20260825133434_catalogo`. Cinco tablas:
 
 **Son tres tablas y no una con un campo `tipo` porque la base impide guardar un
 turno mal armado**: `servicioBaseId` apunta a `Servicio` y no puede apuntar a un
-retiro. Con una sola tabla, el retiro en el lugar del servicio base sería un
-estado que la base acepta. Es la regla 4 de más abajo.
+retiro. El porqué completo y las alternativas están en el
+[ADR-002](adr/002-catalogo-en-tres-tablas.md).
 
 Qué garantiza cada restricción, y por qué está:
 
@@ -194,23 +187,17 @@ no cobra centavos— y la duración es `Int` en **minutos**. El `salonId` está 
 la primera tabla porque el punto 2.3 de la propuesta declara que el diseño
 contempla otros salones aunque el módulo no se construya.
 
-**Límite conocido:** nada impide vincular un servicio del salón 1 con un extra
-del salón 2. La base verifica que ambos existan, no que sean del mismo salón. En
-el MVP hay un solo salón, así que el estado inválido no se puede construir. Se
-resuelve con claves foráneas compuestas que arrastren el `salonId`, junto con el
-mismo problema en `Turno`.
+**Límite conocido:** nada impide vincular un servicio de un salón con un extra de
+otro — la base verifica que ambos existan, no que sean del mismo salón. En el MVP
+hay un solo salón, así que el estado inválido no se puede construir. Se resuelve
+con claves foráneas compuestas (ADR-002).
 
 ## Cómo se organizan las carpetas de la API
 
 **Una carpeta por módulo, con todo lo suyo adentro** — `src/catalogo/` tiene su
 `.module.ts`, su `.controller.ts`, su `.service.ts` y sus tipos. No hay carpetas
-por capa (`controllers/`, `services/`).
-
-Para agregar o entender una pieza se toca **una** carpeta, no tres. Es además lo
-que Nest impone. Se descartó la organización hexagonal (`dominio/`,
-`aplicacion/`, `infraestructura/`): es defendible, pero su beneficio —poder
-cambiar Prisma por otra cosa— resuelve un problema que este proyecto no tiene, y
-cuesta horas sobre un plan que ya está ajustado.
+por capa (`controllers/`, `services/`): para entender una pieza se toca **una**
+carpeta, no tres.
 
 Cierra lo que el ADR-001 dejó abierto.
 
