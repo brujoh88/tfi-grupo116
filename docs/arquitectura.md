@@ -17,6 +17,56 @@ La decisión de fondo —por qué son dos aplicaciones y no una— está en
 Se comunican **solo por HTTP**. El frontend nunca importa código del backend: si
 lo hiciera, dejarían de ser dos aplicaciones aunque las carpetas siguieran ahí.
 
+## Qué arquitectura es esta
+
+**Un monolito modular por dominio, con capas dentro de cada módulo.**
+
+- **Monolito**: una sola aplicación de backend, un solo despliegue, una sola base
+  de datos. Las *dos aplicaciones* del ADR-001 son el backend y el frontend; el
+  backend es uno.
+- **Modular por dominio**: se parte por área del negocio —catálogo, turnos,
+  grilla, disponibilidad, reservas—, no por tipo de archivo.
+- **En capas, adentro de cada módulo**: el controller traduce HTTP y no calcula,
+  el service tiene las reglas, Prisma accede a los datos.
+- **Sin capa de repositorio**: el service consulta Prisma directamente.
+
+Se descartó **hexagonal / clean architecture**: su beneficio es que el negocio no
+conozca la base de datos, y este sistema no va a cambiar de base — PostgreSQL es
+una decisión defendida en la propuesta, porque el invariante de *un horario, un
+turno* se apoya en una restricción de la base. Lo que sí va a cambiar son las
+reglas de negocio, y ahí hexagonal no ahorra nada: si el retiro pasa a sumar diez
+minutos extra, se toca el service de turnos con hexagonal y sin ella.
+
+El porqué completo, con las otras alternativas, está en
+[`adr/004-monolito-modular-por-dominio.md`](adr/004-monolito-modular-por-dominio.md).
+
+## Reglas de dependencia entre módulos
+
+Las flechas del mapa dicen qué depende de qué. Estas reglas dicen **qué está
+prohibido**, que es lo que un dibujo no puede decir:
+
+| # | Regla | Qué evita |
+|---|---|---|
+| 1 | Un módulo de negocio **puede** usar el service de otro, si ese módulo lo exporta | Que cada uno reimplemente lo que otro ya sabe contestar |
+| 2 | **Ningún módulo consulta tablas que no son suyas** | La misma regla de negocio escrita en dos lugares |
+| 3 | **No hay dependencias circulares** | Módulos que no se pueden entender, explicar ni probar por separado. Nest además no arranca |
+| 4 | **La infraestructura no depende del negocio** | Que `PrismaModule` o `SalonModule` tengan que saber que existe el catálogo |
+
+**El caso que las justifica.** El armado del turno necesita los precios del
+catálogo. Puede pedírselos al catálogo (regla 1) o consultar la tabla `Servicio`
+por su cuenta. Lo segundo es más rápido de escribir y **rompe todo**: el día que
+el catálogo cambie qué considera disponible, el armado sigue con la regla vieja y
+nadie se entera hasta que una clienta reserva algo que no se ofrece.
+
+**Cada tabla tiene un módulo dueño.** Es la contracara de la regla 2:
+
+| Tablas | Módulo dueño | Los demás |
+|---|---|---|
+| `Servicio`, `Extra`, `Retiro`, `ServicioExtra` | `CatalogoModule` | preguntan |
+| `Salon` | `CatalogoModule` (lectura); el alta no está en el MVP | — |
+
+Se actualiza al agregar un módulo.
+
 ## Mapa de módulos
 
 ```mermaid
