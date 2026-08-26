@@ -24,6 +24,7 @@ La propuesta completa —problema, alcance, stack y plan de trabajo— está en
 |---|---|
 | Backend | NestJS (TypeScript) |
 | Base de datos | PostgreSQL con Prisma |
+| Documentación de la API | Swagger (OpenAPI) |
 | Frontend | React con Vite |
 | Despliegue del frontend | Vercel |
 | Despliegue del backend | Railway |
@@ -38,8 +39,10 @@ sección 3 de la propuesta.
 backend/             la API en NestJS
   prisma/            el esquema de la base de datos
   src/               el código de la API
+    catalogo/        lo que la clienta puede elegir
     health/          endpoint de estado
     prisma/          la conexión a la base
+    salon/           a qué salón sirve la API
 docs/                documentación del proyecto y entregas de la cátedra
   adr/               las decisiones de arquitectura, con su porqué
 docker-compose.yml   PostgreSQL para desarrollo
@@ -76,6 +79,10 @@ curl http://localhost:3000/health
 ```
 
 Esa respuesta significa que la API levantó **y** que pudo consultar la base.
+
+La API se prueba entera en **http://localhost:3000/docs**, sin frontend: cada
+endpoint se ejecuta desde ahí. Las rutas y lo que devuelve cada una se generan
+desde el código en cada compilación, así que reflejan lo que está corriendo.
 
 ### Detalles que conviene saber
 
