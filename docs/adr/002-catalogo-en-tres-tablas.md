@@ -100,6 +100,5 @@ Y cuatro decisiones de modelado que quedan cerradas acá:
 - **Los identificadores son números correlativos, o sea enumerables.** En el
   catálogo no importa —los servicios son públicos—, pero en `Turno` sí: enumerar
   turnos es ver los de otras clientas. Se decide al modelar esa tabla.
-- **Cómo se estructuran las carpetas dentro de la API**, que el ADR-001 dejó
-  abierto para este momento, sigue sin decidirse: se define al construir
-  `CatalogoModule`.
+- ~~Cómo se estructuran las carpetas dentro de la API.~~ **Resuelto el 26/08 en
+  el [ADR-004](004-monolito-modular-por-dominio.md).**

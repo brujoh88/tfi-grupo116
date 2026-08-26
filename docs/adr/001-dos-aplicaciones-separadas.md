@@ -72,6 +72,6 @@ Y tres decisiones de diseño que quedan cerradas acá:
 
 ## Qué queda abierto
 
-- Cómo se estructuran las carpetas dentro de la API. Se decide al escribir el
-  esquema de la base, no antes.
+- ~~Cómo se estructuran las carpetas dentro de la API.~~ **Resuelto el 26/08 en
+  el [ADR-004](004-monolito-modular-por-dominio.md):** una carpeta por módulo.
 - Cómo viaja la clave del panel entre las dos aplicaciones.
