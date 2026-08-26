@@ -216,6 +216,12 @@ Cierra lo que el ADR-001 dejó abierto.
    desde el código en cada compilación y se publican en `/docs`. Por eso lo que
    sale por HTTP se declara con clases y no con `type`: un `type` se borra al
    compilar y no deja nada que documentar.
+7. **Lo que depende de la base se prueba contra la base.** Un test unitario
+   reemplaza a Prisma por un doble que devuelve lo que se le indica: sirve para
+   comprobar qué hace el servicio con esa respuesta, y **no** puede comprobar que
+   la consulta esté bien escrita, porque el doble no mira el `select` ni el
+   `where`. Los filtros, el orden y el aislamiento por salón se prueban de punta
+   a punta, contra una base con datos.
 
 ## El recorrido de una reserva *(previsto)*
 
