@@ -212,6 +212,10 @@ Cierra lo que el ADR-001 dejó abierto.
    defiende con una restricción de unicidad, no con una verificación previa:
    entre que se consulta y se escribe, la otra reserva ya pasó.
 5. **La grilla es dato, no código.** Los horarios se editan, no se despliegan.
+6. **La API se documenta sola.** Las rutas y lo que devuelve cada una se generan
+   desde el código en cada compilación y se publican en `/docs`. Por eso lo que
+   sale por HTTP se declara con clases y no con `type`: un `type` se borra al
+   compilar y no deja nada que documentar.
 
 ## El recorrido de una reserva *(previsto)*
 
