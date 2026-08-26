@@ -6,6 +6,7 @@ import { Catalogo } from './catalogo.types';
 export class CatalogoController {
   constructor(private readonly catalogo: CatalogoService) {}
 
+  /** Todo lo que la clienta puede elegir hoy en este salón. */
   @Get()
   async consultar(): Promise<Catalogo> {
     return this.catalogo.consultar();
