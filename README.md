@@ -18,6 +18,10 @@ contestar mensajes.
 La propuesta completa —problema, alcance, stack y plan de trabajo— está en
 [`docs/propuesta.md`](docs/propuesta.md).
 
+El avance se sigue en el
+[tablero del proyecto](https://trello.com/b/uxJIQLjU): una tarjeta por pieza,
+etiquetada según la etapa de entrega a la que corresponde.
+
 ## Tecnologías
 
 | Pieza | Tecnología |
