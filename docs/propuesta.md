@@ -194,22 +194,49 @@ local, así el desarrollo no depende de la conexión ni toca la base de producci
 
 ## 4. Plan de trabajo
 
-### 4.1 Objetivos
+### 4.1 Objetivos y su medición
 
 **Objetivo general.** Que el salón deje de dar turnos a mano: que la clienta
-reserve sola desde el celular, y que el salón administre su agenda sin depender de
-contestar mensajes.
+reserve sola desde el celular, y que el salón administre su agenda sin depender
+de contestar mensajes.
 
-**Objetivos específicos.**
+**Objetivos específicos.** Cada uno declara cómo se verifica y **cuándo**, porque
+no todos se pueden dar por cumplidos el mismo día.
 
-1. Publicar la disponibilidad del salón calculada a partir de su grilla, sin
-   intervención humana.
-2. Permitir que la clienta arme su turno —servicio base, extras y retiro— y que
-   el sistema calcule su precio y su duración.
-3. Ofrecer únicamente los horarios en los que el turno armado entra completo.
-4. Impedir que un mismo horario quede tomado por dos clientas.
-5. Permitir que el salón abra o cierre horarios puntuales desde el celular.
-6. Tener el sistema funcionando en la nube y accesible desde un enlace público.
+**Se verifican en la entrega del 14/11.** Dependen solo de que el sistema esté
+construido y desplegado.
+
+1. **Una clienta reserva un turno de punta a punta sin que nadie del salón
+   intervenga.**
+   *Se verifica con una reserva real hecha fuera del horario de atención, sin
+   que nadie del salón conteste nada.*
+2. **Ningún turno tomado por la aplicación obliga a reacomodar la agenda a
+   mano.**
+   *Se verifica sobre el sistema desplegado: tomando en una misma franja todos
+   los turnos que la grilla permite, ninguno queda superpuesto con otro ni pasa
+   del horario de cierre.*
+3. **La dueña abre o cierra un horario puntual desde el celular sin ayuda de
+   nadie.**
+   *Se le pide que abra un horario y lo hace sin que ninguno de los dos le
+   indique cómo.*
+
+**Se miden con el sistema en uso.** Son objetivos de adopción: dependen de que el
+salón cambie lo que hace hoy, no de que nosotros terminemos de construir. Se
+miden **al mes de que el salón opere el sistema**, que es después de la entrega.
+
+4. **La dueña deja de contestar mensajes para dar un turno.**
+   *Ningún turno se acuerda por mensaje: los que llegan se responden con el
+   enlace. La línea de base es la media hora diaria que dedica hoy.*
+5. **La imagen de disponibilidad deja de publicarse.**
+   *No se publica ninguna imagen nueva de disponibilidad en la cuenta del salón.*
+
+La entrega del 14/11 prueba que **el sistema hace lo que tiene que hacer**. Que el
+salón cambie su forma de trabajar necesita uso, y se declara así en lugar de dar
+por cumplido en noviembre algo que recién puede medirse después.
+
+Estos objetivos dicen **qué tiene que cambiar en el salón**. Qué tiene que hacer
+el sistema para que eso pase —los requerimientos y las reglas de negocio— está
+declarado en el punto 2.3, y el plan para construirlo, en 4.2 y 4.3.
 
 ### 4.2 Etapas y entregables
 
@@ -275,18 +302,6 @@ orden:
 3. **El panel deja de permitir cerrar horarios** y solo permite abrirlos. Cerrar
    tiene sustituto —la dueña puede tomar ella misma ese turno—; abrir horarios
    fuera de la grilla no tiene ninguno, y es el diferenciador del proyecto.
-
-### 4.6 Criterios de éxito
-
-El MVP cumplió su propósito si, con el sistema en funcionamiento:
-
-1. **Una clienta reserva un turno de punta a punta sin que nadie del salón
-   intervenga.**
-2. **La dueña no necesita contestar ningún mensaje para dar un turno.** La línea
-   de base es la media hora diaria que dedica hoy.
-3. **La dueña abre o cierra un horario desde el celular sin ayuda de nadie.**
-4. **La imagen de disponibilidad deja de publicarse**, porque la aplicación
-   muestra los horarios reales.
 
 ---
 
