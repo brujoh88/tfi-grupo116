@@ -72,7 +72,7 @@ graph TD
         Health["HealthModule<br/>¿está todo vivo?"]
         Catalogo["CatalogoModule<br/>qué se puede elegir"]
         Salon["SalonModule<br/>de qué salón es el pedido"]
-        Turnos["TurnosModule<br/>(previsto)"]
+        Turnos["TurnosModule<br/>cuánto sale y cuánto dura"]
         Grilla["GrillaModule<br/>(previsto)"]
         Disp["DisponibilidadModule<br/>(previsto)"]
         Reservas["ReservasModule<br/>(previsto)"]
@@ -144,6 +144,27 @@ Ver [`adr/003-el-salon-sale-del-entorno.md`](adr/003-el-salon-sale-del-entorno.m
   tipo que genera Prisma: publicar un campo tiene que ser una decisión, no el
   efecto secundario de tocar una tabla.
 
+### `TurnosModule` — cuánto sale y cuánto dura
+
+- **Qué responde**: `POST /turnos/armado` → lo elegido con su nombre y su precio,
+  más el precio total y la duración total del turno.
+- **De qué depende**: solo de `CatalogoModule`. **No importa `PrismaModule`**:
+  no es dueño de ninguna tabla.
+- **Por qué no guarda nada**: armar un turno es una consulta, no un hecho del
+  negocio. La composición se persiste recién al reservar, con los precios
+  congelados de ese momento, y esa tabla va a ser de `ReservasModule`.
+- **Cómo valida**: le pide el catálogo a `CatalogoService`, que ya devuelve solo
+  lo activo de este salón y, por servicio, solo los extras compatibles. Un extra
+  que no está en esa lista se rechaza sin averiguar por qué falta: si no existe,
+  si está dado de baja o si no va con ese servicio, para la clienta es lo mismo.
+- **Qué rechaza con `400`**: el servicio no disponible, un extra que no se le
+  puede sumar, el mismo extra dos veces, y el retiro no disponible.
+- **Contesta `200` y no `201`** aunque sea un `POST`: no se creó ningún recurso.
+  Es `POST` porque la lista de extras es de largo variable y en la query string
+  habría que parsearla a mano.
+
+Ver [`adr/005-el-turno-armado-se-calcula.md`](adr/005-el-turno-armado-se-calcula.md).
+
 ## Los módulos previstos
 
 Salen del alcance del MVP (`propuesta.md`, punto 2.3). Cada uno responde **una**
@@ -151,7 +172,6 @@ pregunta:
 
 | Módulo | La pregunta que responde |
 |---|---|
-| `TurnosModule` | Dado lo que la clienta armó, ¿cuánto sale y cuánto dura? |
 | `GrillaModule` | ¿Qué horarios ofrece el salón ese día, contando lo que se abrió y lo que se cerró? |
 | `DisponibilidadModule` | ¿En qué horarios entra completo **este** turno armado? |
 | `ReservasModule` | Tomar el horario y garantizar que no se lo lleven dos |
@@ -212,11 +232,16 @@ Cierra lo que el ADR-001 dejó abierto.
    defiende con una restricción de unicidad, no con una verificación previa:
    entre que se consulta y se escribe, la otra reserva ya pasó.
 5. **La grilla es dato, no código.** Los horarios se editan, no se despliegan.
-6. **La API se documenta sola.** Las rutas y lo que devuelve cada una se generan
+6. **La forma de lo que entra la comprueba el framework, no el servicio.** Un
+   `ValidationPipe` global rechaza con `400` lo que no coincide con el DTO antes
+   de llegar al servicio, y descarta los campos que el DTO no declara. El
+   servicio recibe datos con la forma correcta y solo se ocupa de las reglas del
+   salón.
+7. **La API se documenta sola.** Las rutas y lo que devuelve cada una se generan
    desde el código en cada compilación y se publican en `/docs`. Por eso lo que
    sale por HTTP se declara con clases y no con `type`: un `type` se borra al
    compilar y no deja nada que documentar.
-7. **Lo que depende de la base se prueba contra la base.** Un test unitario
+8. **Lo que depende de la base se prueba contra la base.** Un test unitario
    reemplaza a Prisma por un doble que devuelve lo que se le indica: sirve para
    comprobar qué hace el servicio con esa respuesta, y **no** puede comprobar que
    la consulta esté bien escrita, porque el doble no mira el `select` ni el
