@@ -25,6 +25,7 @@ model Salon {
   servicios Servicio[]
   extras    Extra[]
   retiros   Retiro[]
+  lugares   Lugar[]
 }
 
 model Servicio {
@@ -37,7 +38,8 @@ model Servicio {
   salonId Int
   salon   Salon @relation(fields: [salonId], references: [id])
 
-  extras ServicioExtra[]
+  extras  ServicioExtra[]
+  lugares LugarServicio[]
 
   @@unique([salonId, nombre])
 }
@@ -79,4 +81,73 @@ model ServicioExtra {
   extra   Extra @relation(fields: [extraId], references: [id])
 
   @@id([servicioId, extraId])
+}
+
+// ---------------------------------------------------------------------------
+// Grilla
+// ---------------------------------------------------------------------------
+
+// El lugar físico donde se atiende: una mesa de uñas, una camilla. Es lo que
+// limita cuántos turnos entran a la vez; su horario lleva implícito el de quien
+// lo atiende.
+model Lugar {
+  id     Int     @id @default(autoincrement())
+  nombre String
+  activo Boolean @default(true)
+
+  salonId Int
+  salon   Salon @relation(fields: [salonId], references: [id])
+
+  servicios   LugarServicio[]
+  franjas     Franja[]
+  excepciones Excepcion[]
+
+  @@unique([salonId, nombre])
+}
+
+// Qué servicio se puede hacer en qué lugar. Una fila por combinación permitida.
+model LugarServicio {
+  lugarId Int
+  lugar   Lugar @relation(fields: [lugarId], references: [id])
+
+  servicioId Int
+  servicio   Servicio @relation(fields: [servicioId], references: [id])
+
+  @@id([lugarId, servicioId])
+}
+
+// La plantilla semanal: cuándo está abierto cada lugar. Un lugar puede tener
+// varias franjas el mismo día (de 9 a 13 y de 15 a 19).
+// Las horas van en minutos desde la medianoche (9:30 es 570) y el día de la
+// semana de 0 (domingo) a 6 (sábado), como lo cuentan Postgres y JavaScript.
+// ⚠️ Que el día esté entre 0 y 6 y que desde < hasta lo controla la base con
+// CHECK escritos a mano en la migración 20260924162428_grilla: acá no se ven.
+model Franja {
+  id          Int @id @default(autoincrement())
+  diaSemana   Int
+  desdeMinuto Int
+  hastaMinuto Int
+
+  lugarId Int
+  lugar   Lugar @relation(fields: [lugarId], references: [id])
+}
+
+enum TipoExcepcion {
+  ABRE
+  CIERRA
+}
+
+// Lo que la dueña cambia un día puntual: abre una franja que la plantilla no
+// tiene, o cierra una que sí. La fecha es un día suelto, sin hora ni zona
+// horaria: el 14/10 es el 14/10 aunque el servidor corra en otro huso.
+// ⚠️ Que desde < hasta lo controla un CHECK de la migración 20260924162428_grilla.
+model Excepcion {
+  id          Int           @id @default(autoincrement())
+  fecha       DateTime      @db.Date
+  desdeMinuto Int
+  hastaMinuto Int
+  tipo        TipoExcepcion
+
+  lugarId Int
+  lugar   Lugar @relation(fields: [lugarId], references: [id])
 }
