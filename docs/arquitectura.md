@@ -58,6 +58,7 @@ una clienta reserva algo que no se ofrece.
 |---|---|---|
 | `Servicio`, `Extra`, `Retiro`, `ServicioExtra` | `CatalogoModule` | preguntan |
 | `Salon` | `CatalogoModule` (lectura); el alta no está en el MVP | — |
+| `Lugar`, `LugarServicio`, `Franja`, `Excepcion` | `GrillaModule` | preguntan |
 
 Se actualiza al agregar un módulo.
 
@@ -73,7 +74,7 @@ graph TD
         Catalogo["CatalogoModule<br/>qué se puede elegir"]
         Salon["SalonModule<br/>de qué salón es el pedido"]
         Turnos["TurnosModule<br/>cuánto sale y cuánto dura"]
-        Grilla["GrillaModule<br/>(previsto)"]
+        Grilla["GrillaModule<br/>qué está abierto ese día"]
         Disp["DisponibilidadModule<br/>(previsto)"]
         Reservas["ReservasModule<br/>(previsto)"]
         Prisma["PrismaModule<br/>la conexión"]
@@ -86,6 +87,7 @@ graph TD
     Disp --> Turnos
     Disp --> Grilla
     Grilla --> Prisma
+    Grilla --> Salon
     Reservas --> Disp
     Reservas --> Prisma
     Prisma --> DB[("PostgreSQL")]
@@ -165,6 +167,28 @@ Ver [`adr/003-el-salon-sale-del-entorno.md`](adr/003-el-salon-sale-del-entorno.m
 
 Ver [`adr/005-el-turno-armado-se-calcula.md`](adr/005-el-turno-armado-se-calcula.md).
 
+### `GrillaModule` — qué está abierto ese día
+
+- **Qué responde**: `GET /grilla?fecha=2026-10-12` → cada lugar activo del salón
+  con los tramos que tiene abiertos ese día, en minutos desde la medianoche. Con
+  `&servicioId=` devuelve solo los lugares que hacen ese servicio.
+- **De qué depende**: de `PrismaModule` y de `SalonModule`.
+- **Cómo trabaja**: toma la plantilla del día de la semana, le suma lo que la
+  dueña abrió y le resta lo que cerró. Esa cuenta es una función pura,
+  `abiertoElDia`, con sus propios tests. Los tramos que se tocan se juntan —9 a
+  13 más 13 a 14 da 9 a 14—, y si una apertura y un cierre se pisan, **gana el
+  cierre**: un horario de menos lo corrige la dueña; uno de más es una clienta que
+  llega y no la atiende nadie.
+- **Qué no hace**: no sabe de reservas. Dice qué está **abierto**, no qué está
+  **libre**: eso es la disponibilidad, que le resta los turnos tomados. Si la
+  grilla lo supiera, "está ocupado" se calcularía en dos módulos.
+- **Es el único que lee `LugarServicio`**: la disponibilidad le pregunta qué
+  lugares hacen un servicio, no consulta la tabla (regla 2).
+- **La fecha se toma a medianoche UTC**, así el día de la semana no depende del
+  huso horario del servidor.
+
+Ver [`adr/006-la-grilla-son-lugares-abiertos-por-franjas.md`](adr/006-la-grilla-son-lugares-abiertos-por-franjas.md).
+
 ## Los módulos previstos
 
 Salen del alcance del MVP (`propuesta.md`, punto 2.3). Cada uno responde **una**
@@ -172,7 +196,6 @@ pregunta:
 
 | Módulo | La pregunta que responde |
 |---|---|
-| `GrillaModule` | ¿Qué horarios ofrece el salón ese día, contando lo que se abrió y lo que se cerró? |
 | `DisponibilidadModule` | ¿En qué horarios entra completo **este** turno armado? |
 | `ReservasModule` | Tomar el horario y garantizar que no se lo lleven dos |
 
@@ -211,6 +234,37 @@ contempla otros salones aunque el módulo no se construya.
 otro — la base verifica que ambos existan, no que sean del mismo salón. En el MVP
 hay un solo salón, así que el estado inválido no se puede construir. Se resuelve
 con claves foráneas compuestas (ADR-002).
+
+## Las tablas de la grilla
+
+Migración `20260924162428_grilla`. Cuatro tablas y un enum:
+
+| Tabla | Qué guarda |
+|---|---|
+| `Lugar` | Dónde se atiende: una mesa de uñas, una camilla. Es lo que limita cuántos turnos entran a la vez |
+| `LugarServicio` | Qué servicio se puede hacer en qué lugar: una fila por combinación permitida |
+| `Franja` | La plantilla semanal: un lugar, un día de la semana, desde y hasta |
+| `Excepcion` | Lo que cambia un día puntual: un lugar, una fecha, desde, hasta, y si `ABRE` o `CIERRA` |
+
+**El recurso es el lugar, no la persona**, y **la plantilla va en franjas, no en
+horarios fijos**. El porqué y las alternativas están en el
+[ADR-006](adr/006-la-grilla-son-lugares-abiertos-por-franjas.md).
+
+| Restricción | Qué impide |
+|---|---|
+| `@@unique([salonId, nombre])` en `Lugar` | Dos "Mesa 1" en el mismo salón |
+| `@@id([lugarId, servicioId])` | Cargar dos veces el mismo vínculo |
+| `activo Boolean` en `Lugar` | Que dar de baja una mesa borre la historia de los turnos que se hicieron ahí |
+| `CHECK` del día entre 0 y 6 | Una franja un "día 9" |
+| `CHECK` de `0 ≤ desde < hasta ≤ 1440` | Una franja o una excepción "de 13 a 9", o que termine pasada la medianoche |
+
+**Los `CHECK` no están en `schema.prisma`**: Prisma no los sabe escribir, así que
+van a mano en la migración. El esquema lo avisa con un comentario.
+
+**Convenciones:** las horas son `Int` en **minutos desde la medianoche** (9:30 es
+570) y el día de la semana va de 0 (domingo) a 6 (sábado), como lo cuentan
+Postgres y JavaScript. La fecha de la excepción es `DATE`: un día suelto, sin
+hora ni zona horaria.
 
 ## Cómo se organizan las carpetas de la API
 

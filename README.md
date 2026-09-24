@@ -44,9 +44,11 @@ backend/             la API en NestJS
   prisma/            el esquema de la base de datos
   src/               el código de la API
     catalogo/        lo que la clienta puede elegir
+    grilla/          qué tiene abierto cada lugar un día
     health/          endpoint de estado
     prisma/          la conexión a la base
     salon/           a qué salón sirve la API
+    turnos/          cuánto sale y cuánto dura un turno armado
 docs/                documentación del proyecto y entregas de la cátedra
   adr/               las decisiones de arquitectura, con su porqué
 docker-compose.yml   PostgreSQL para desarrollo
