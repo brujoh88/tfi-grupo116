@@ -26,6 +26,7 @@ model Salon {
   extras    Extra[]
   retiros   Retiro[]
   lugares   Lugar[]
+  clientas  Clienta[]
 }
 
 model Servicio {
@@ -38,8 +39,9 @@ model Servicio {
   salonId Int
   salon   Salon @relation(fields: [salonId], references: [id])
 
-  extras  ServicioExtra[]
-  lugares LugarServicio[]
+  extras   ServicioExtra[]
+  lugares  LugarServicio[]
+  reservas Reserva[]
 
   @@unique([salonId, nombre])
 }
@@ -55,6 +57,7 @@ model Extra {
   salon   Salon @relation(fields: [salonId], references: [id])
 
   servicios ServicioExtra[]
+  reservas  ReservaExtra[]
 
   @@unique([salonId, nombre])
 }
@@ -68,6 +71,8 @@ model Retiro {
 
   salonId Int
   salon   Salon @relation(fields: [salonId], references: [id])
+
+  reservas Reserva[]
 
   @@unique([salonId, nombre])
 }
@@ -101,6 +106,7 @@ model Lugar {
   servicios   LugarServicio[]
   franjas     Franja[]
   excepciones Excepcion[]
+  reservas    Reserva[]
 
   @@unique([salonId, nombre])
 }
@@ -150,4 +156,68 @@ model Excepcion {
 
   lugarId Int
   lugar   Lugar @relation(fields: [lugarId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Reservas
+// ---------------------------------------------------------------------------
+
+// Quien reserva. Se identifica por teléfono, sin registro. Guarda lo mismo que
+// se guardaría en cada reserva, escrito una sola vez: no es una ficha ni un
+// historial, que están fuera del MVP.
+model Clienta {
+  id       Int    @id @default(autoincrement())
+  telefono String
+  nombre   String
+
+  salonId Int
+  salon   Salon @relation(fields: [salonId], references: [id])
+
+  reservas Reserva[]
+
+  @@unique([salonId, telefono])
+}
+
+// Un turno tomado: quién, dónde, qué día y de qué hora a qué hora, con lo que
+// armó y el precio de cada cosa copiado al momento de reservar. Si el catálogo
+// cambia después, la reserva sigue diciendo lo que se cobró.
+// Las horas van como en la grilla: minutos desde la medianoche. La duración no
+// se guarda aparte porque es fin menos inicio.
+// ⚠️ Que dos reservas de la misma mesa y el mismo día no se superpongan lo
+// garantiza una restricción EXCLUDE escrita a mano en la migración: acá no se ve.
+model Reserva {
+  id           Int      @id @default(autoincrement())
+  fecha        DateTime @db.Date
+  inicioMinuto Int
+  finMinuto    Int
+  creadaEn     DateTime @default(now())
+
+  clientaId Int
+  clienta   Clienta @relation(fields: [clientaId], references: [id])
+
+  lugarId Int
+  lugar   Lugar @relation(fields: [lugarId], references: [id])
+
+  servicioId     Int
+  servicio       Servicio @relation(fields: [servicioId], references: [id])
+  servicioPrecio Int
+
+  retiroId     Int?
+  retiro       Retiro? @relation(fields: [retiroId], references: [id], onDelete: Restrict)
+  retiroPrecio Int?
+
+  extras ReservaExtra[]
+}
+
+// Los extras de una reserva, con el precio de cada uno al momento de reservar.
+model ReservaExtra {
+  reservaId Int
+  reserva   Reserva @relation(fields: [reservaId], references: [id])
+
+  extraId Int
+  extra   Extra @relation(fields: [extraId], references: [id])
+
+  precio Int
+
+  @@id([reservaId, extraId])
 }
