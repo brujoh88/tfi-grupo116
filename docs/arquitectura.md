@@ -59,6 +59,7 @@ una clienta reserva algo que no se ofrece.
 | `Servicio`, `Extra`, `Retiro`, `ServicioExtra` | `CatalogoModule` | preguntan |
 | `Salon` | `CatalogoModule` (lectura); el alta no está en el MVP | — |
 | `Lugar`, `LugarServicio`, `Franja`, `Excepcion` | `GrillaModule` | preguntan |
+| `Clienta`, `Reserva`, `ReservaExtra` | `ReservasModule` *(previsto)* | preguntan |
 
 Se actualiza al agregar un módulo.
 
@@ -197,7 +198,7 @@ pregunta:
 | Módulo | La pregunta que responde |
 |---|---|
 | `DisponibilidadModule` | ¿En qué horarios entra completo **este** turno armado? |
-| `ReservasModule` | Tomar el horario y garantizar que no se lo lleven dos |
+| `ReservasModule` | Tomar el horario. Que no se lo lleven dos ya lo garantiza la base (ADR-007); el módulo traduce el rechazo en "ese horario se acaba de ocupar" |
 
 ## Las tablas que existen hoy — el catálogo
 
@@ -266,6 +267,35 @@ van a mano en la migración. El esquema lo avisa con un comentario.
 Postgres y JavaScript. La fecha de la excepción es `DATE`: un día suelto, sin
 hora ni zona horaria.
 
+## Las tablas de la reserva
+
+Migración `20260925140051_reservas`. Las tablas existen; el módulo que las usa,
+`ReservasModule`, es de la entrega 3.
+
+| Tabla | Qué guarda |
+|---|---|
+| `Clienta` | Quien reserva: teléfono y nombre. Se identifica por teléfono, sin registro. **No es una ficha ni un historial** |
+| `Reserva` | Un turno tomado: la clienta, la mesa, el día, de qué hora a qué hora, el servicio y el retiro con su precio copiado |
+| `ReservaExtra` | Los extras de una reserva, cada uno con su precio copiado |
+
+**"Un horario, un turno" es una restricción de no superposición**, no de
+unicidad: dos turnos de largo distinto pueden empezar a horas diferentes y
+pisarse igual. El porqué y las alternativas están en el
+[ADR-007](adr/007-un-horario-un-turno-sin-superposicion.md).
+
+| Restricción | Qué impide |
+|---|---|
+| `EXCLUDE` sobre mesa, fecha y `[inicio, fin)` | Dos reservas encimadas en la misma mesa el mismo día, aunque lleguen en el mismo segundo |
+| `@@unique([salonId, telefono])` | La misma clienta cargada dos veces |
+| `CHECK` de `0 ≤ inicio < fin ≤ 1440` | Un turno "de 13 a 9" |
+| `CHECK` del retiro con su precio | Un retiro sin precio, o un precio sin retiro |
+| `ON DELETE RESTRICT`, también en el retiro | Borrar del catálogo algo que una reserva usó |
+
+**El precio de cada ítem se copia al reservar**: el comprobante de octubre dice
+lo que se cobró en octubre aunque el catálogo haya cambiado. **La duración no se
+guarda**: es fin menos inicio. El `EXCLUDE` y los `CHECK` van a mano en la
+migración y no se ven en `schema.prisma`.
+
 ## Cómo se organizan las carpetas de la API
 
 **Una carpeta por módulo, con todo lo suyo adentro** — `src/catalogo/` tiene su
@@ -283,8 +313,9 @@ Cierra lo que el ADR-001 dejó abierto.
 3. **Las pantallas preguntan, no recalculan.** Si el frontend suma duraciones por
    su cuenta, el día que cambie la regla va a quedar desactualizado.
 4. **El invariante lo garantiza la base de datos.** "Un horario, un turno" se
-   defiende con una restricción de unicidad, no con una verificación previa:
-   entre que se consulta y se escribe, la otra reserva ya pasó.
+   defiende con una restricción de la base —de no superposición, ver ADR-007—,
+   no con una verificación previa: entre que se consulta y se escribe, la otra
+   reserva ya pasó.
 5. **La grilla es dato, no código.** Los horarios se editan, no se despliegan.
 6. **La forma de lo que entra la comprueba el framework, no el servicio.** Un
    `ValidationPipe` global rechaza con `400` lo que no coincide con el DTO antes
