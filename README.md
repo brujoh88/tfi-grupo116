@@ -73,7 +73,11 @@ npm install
 # 3. La configuración local
 cp .env.example .env
 
-# 4. La API, en modo desarrollo
+# 4. Las tablas, y los datos de ejemplo
+npx prisma migrate deploy
+npx prisma db seed
+
+# 5. La API, en modo desarrollo
 npm run start:dev
 ```
 
@@ -99,6 +103,9 @@ desde el código en cada compilación, así que reflejan lo que está corriendo.
   (script `postinstall`), a partir de `prisma/schema.prisma`.
 - **Prisma 7** necesita un *driver adapter* (`@prisma/adapter-pg`). La mayoría de
   los tutoriales están escritos para Prisma 6, donde eso no existía.
+- **Los datos de ejemplo son inventados**: un salón ficticio con su catálogo y su
+  grilla (`prisma/seed.ts`). El seed solo carga sobre un salón vacío; si ya tiene
+  catálogo, no toca nada.
 - Los datos sobreviven a `docker compose down`. Para borrarlos de verdad:
   `docker compose down -v`.
 
