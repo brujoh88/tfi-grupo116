@@ -22,6 +22,29 @@ El avance se sigue en el
 [tablero del proyecto](https://trello.com/b/uxJIQLjU): una tarjeta por pieza,
 etiquetada según la etapa de entrega a la que corresponde.
 
+## Entregas
+
+### 2.ª entrega — Esquema de la base de datos y listado de módulos
+
+| Qué | Dónde |
+|---|---|
+| **Diagrama entidad-relación** | [`docs/diagrama-er.md`](docs/diagrama-er.md): las doce tablas —catálogo, grilla y reservas— con campos, tipos, claves, relaciones, índices y restricciones |
+| **Scripts de la base de datos** | [`database/`](database/): el DDL completo en `esquema.sql`. La fuente son las migraciones de [`backend/prisma/migrations/`](backend/prisma/migrations/) |
+| **Listado de módulos** | [`docs/modulos.md`](docs/modulos.md): los módulos funcionales, con su descripción, prioridad y entrega |
+| **Arquitectura** | [`docs/arquitectura.md`](docs/arquitectura.md): el estilo elegido, los módulos de la API, quién es dueño de cada tabla y las reglas de dependencia. Las tecnologías y su justificación, en la sección 3 de la [propuesta](docs/propuesta.md) |
+| **Las decisiones, con su porqué** | [`docs/adr/`](docs/adr/), abajo |
+| **Datos de ejemplo** | [`backend/prisma/seed.ts`](backend/prisma/seed.ts): un salón inventado con su catálogo y su grilla, para probar la API en `/docs` (ver [Instalación](#instalación)) |
+
+| ADR | Decide |
+|---|---|
+| [001](docs/adr/001-dos-aplicaciones-separadas.md) | La API y las pantallas son dos aplicaciones separadas |
+| [002](docs/adr/002-catalogo-en-tres-tablas.md) | Servicios, extras y retiros van en tres tablas, no en una |
+| [003](docs/adr/003-el-salon-sale-del-entorno.md) | De qué salón es un pedido lo contesta un solo lugar, y hoy sale del entorno |
+| [004](docs/adr/004-monolito-modular-por-dominio.md) | La API es un monolito modular por dominio |
+| [005](docs/adr/005-el-turno-armado-se-calcula.md) | El turno armado se calcula, no se guarda |
+| [006](docs/adr/006-la-grilla-son-lugares-abiertos-por-franjas.md) | La grilla son lugares abiertos por franjas, no horarios fijos |
+| [007](docs/adr/007-un-horario-un-turno-sin-superposicion.md) | "Un horario, un turno" lo garantiza la base con una restricción de no superposición |
+
 ## Tecnologías
 
 | Pieza | Tecnología |
@@ -41,7 +64,7 @@ sección 3 de la propuesta.
 
 ```
 backend/             la API en NestJS
-  prisma/            el esquema de la base de datos
+  prisma/            el esquema, las migraciones y los datos de ejemplo
   src/               el código de la API
     catalogo/        lo que la clienta puede elegir
     grilla/          qué tiene abierto cada lugar un día
@@ -49,13 +72,14 @@ backend/             la API en NestJS
     prisma/          la conexión a la base
     salon/           a qué salón sirve la API
     turnos/          cuánto sale y cuánto dura un turno armado
+database/            el DDL completo del esquema, generado de las migraciones
 docs/                documentación del proyecto y entregas de la cátedra
   adr/               las decisiones de arquitectura, con su porqué
+frontend/            las pantallas en React con Vite (tercera etapa)
 docker-compose.yml   PostgreSQL para desarrollo
 ```
 
-`frontend/` se agrega cuando arranque React. La API y las pantallas son dos
-aplicaciones separadas: el porqué está en
+La API y las pantallas son dos aplicaciones separadas: el porqué está en
 [`docs/adr/001-dos-aplicaciones-separadas.md`](docs/adr/001-dos-aplicaciones-separadas.md).
 
 ## Instalación
