@@ -4,6 +4,11 @@ Trabajo Final Integrador — Tecnicatura Universitaria en Programación (UTN).
 
 Sistema de turnos para un salón de estética.
 
+**La API está online** y se prueba desde el navegador, con datos de ejemplo:
+**https://tfi-grupo116-production.up.railway.app/docs**. Corre en Railway, con la
+base en Neon. Si tarda en contestar la primera vez, es la base despertándose: se
+duerme tras unos minutos sin uso.
+
 ## El proyecto
 
 El salón da sus turnos a mano: la clienta escribe por Instagram o WhatsApp,
