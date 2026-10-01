@@ -100,6 +100,11 @@ const LUGARES = [
   },
 ];
 
+// Prisma corta una transacción a los 5 segundos. Contra la base de la nube, desde
+// acá, son decenas de consultas de un viaje largo cada una y no alcanza. Si se
+// corta, no queda nada a medias: la transacción se deshace entera.
+const TIEMPO_DE_LA_TRANSACCION = { timeout: 120_000, maxWait: 20_000 };
+
 async function sembrar(prisma: PrismaClient, salonId: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await tx.salon.upsert({
@@ -166,7 +171,7 @@ async function sembrar(prisma: PrismaClient, salonId: number): Promise<void> {
       `Salón ${salonId}: ${SERVICIOS.length} servicios, ${EXTRAS.length} extras, ` +
         `${RETIROS.length} retiros y ${LUGARES.length} lugares con su grilla.`,
     );
-  });
+  }, TIEMPO_DE_LA_TRANSACCION);
 }
 
 async function main(): Promise<void> {
