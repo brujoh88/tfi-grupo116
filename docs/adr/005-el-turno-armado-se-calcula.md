@@ -1,6 +1,7 @@
 # ADR-005: El turno armado se calcula, no se guarda
 
-- **Estado**: Aceptado
+- **Estado**: Aceptado. **Modificado por el [ADR-008](008-la-agenda-es-duena-de-las-reservas.md)**:
+  las tablas de la reserva son de `AgendaModule`, no de `ReservasModule`
 - **Fecha**: 2026-09-09
 - **Deciden**: Gustavo Tiseira y Nicolás Viruel
 
