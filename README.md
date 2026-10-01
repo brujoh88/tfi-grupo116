@@ -49,6 +49,7 @@ etiquetada según la etapa de entrega a la que corresponde.
 | [005](docs/adr/005-el-turno-armado-se-calcula.md) | El turno armado se calcula, no se guarda |
 | [006](docs/adr/006-la-grilla-son-lugares-abiertos-por-franjas.md) | La grilla son lugares abiertos por franjas, no horarios fijos |
 | [007](docs/adr/007-un-horario-un-turno-sin-superposicion.md) | "Un horario, un turno" lo garantiza la base con una restricción de no superposición |
+| [008](docs/adr/008-la-agenda-es-duena-de-las-reservas.md) | Las reservas se parten en agenda (dueña de las tablas) y reserva (el trámite), para que la disponibilidad no quede en un círculo |
 
 ## Tecnologías
 
@@ -71,7 +72,9 @@ sección 3 de la propuesta.
 backend/             la API en NestJS
   prisma/            el esquema, las migraciones y los datos de ejemplo
   src/               el código de la API
+    agenda/          qué está ocupado; dueña de las reservas
     catalogo/        lo que la clienta puede elegir
+    disponibilidad/  en qué horarios entra un turno armado
     grilla/          qué tiene abierto cada lugar un día
     health/          endpoint de estado
     prisma/          la conexión a la base

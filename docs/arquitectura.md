@@ -59,7 +59,7 @@ una clienta reserva algo que no se ofrece.
 | `Servicio`, `Extra`, `Retiro`, `ServicioExtra` | `CatalogoModule` | preguntan |
 | `Salon` | `CatalogoModule` (lectura); el alta no está en el MVP | — |
 | `Lugar`, `LugarServicio`, `Franja`, `Excepcion` | `GrillaModule` | preguntan |
-| `Clienta`, `Reserva`, `ReservaExtra` | `ReservasModule` *(previsto)* | preguntan |
+| `Clienta`, `Reserva`, `ReservaExtra` | `AgendaModule` | preguntan |
 
 Se actualiza al agregar un módulo.
 
@@ -76,7 +76,8 @@ graph TD
         Salon["SalonModule<br/>de qué salón es el pedido"]
         Turnos["TurnosModule<br/>cuánto sale y cuánto dura"]
         Grilla["GrillaModule<br/>qué está abierto ese día"]
-        Disp["DisponibilidadModule<br/>(previsto)"]
+        Disp["DisponibilidadModule<br/>en qué horarios entra"]
+        Agenda["AgendaModule<br/>qué está ocupado"]
         Reservas["ReservasModule<br/>(previsto)"]
         Prisma["PrismaModule<br/>la conexión"]
     end
@@ -87,10 +88,12 @@ graph TD
     Turnos --> Catalogo
     Disp --> Turnos
     Disp --> Grilla
+    Disp --> Agenda
     Grilla --> Prisma
     Grilla --> Salon
+    Agenda --> Prisma
     Reservas --> Disp
-    Reservas --> Prisma
+    Reservas --> Agenda
     Prisma --> DB[("PostgreSQL")]
 ```
 
@@ -98,6 +101,14 @@ Las flechas son dependencias reales: **quien apunta, importa al otro**. Que
 `ReservasModule` dependa de `DisponibilidadModule` y no al revés no es un
 detalle — significa que reservar *pregunta* si el horario entra, en vez de
 decidirlo por su cuenta.
+
+**Por qué hay una `AgendaModule` abajo de las reservas.** La disponibilidad
+necesita saber qué está ocupado, y eso está en `Reserva`. Si la tabla fuera de
+`ReservasModule`, la disponibilidad tendría que preguntarle a reservas, y
+reservas ya le pregunta a la disponibilidad: un círculo (regla 3). Por eso la
+tabla es de un módulo de abajo, que solo guarda y dice qué está tomado, y los dos
+le preguntan a él. Ver el
+[ADR-008](adr/008-la-agenda-es-duena-de-las-reservas.md).
 
 ## Los módulos que existen hoy
 
@@ -155,7 +166,7 @@ Ver [`adr/003-el-salon-sale-del-entorno.md`](adr/003-el-salon-sale-del-entorno.m
   no es dueño de ninguna tabla.
 - **Por qué no guarda nada**: armar un turno es una consulta, no un hecho del
   negocio. La composición se persiste recién al reservar, con los precios
-  congelados de ese momento, y esa tabla va a ser de `ReservasModule`.
+  congelados de ese momento, en las tablas de `AgendaModule`.
 - **Cómo valida**: le pide el catálogo a `CatalogoService`, que ya devuelve solo
   lo activo de este salón y, por servicio, solo los extras compatibles. Un extra
   que no está en esa lista se rechaza sin averiguar por qué falta: si no existe,
@@ -190,6 +201,38 @@ Ver [`adr/005-el-turno-armado-se-calcula.md`](adr/005-el-turno-armado-se-calcula
 
 Ver [`adr/006-la-grilla-son-lugares-abiertos-por-franjas.md`](adr/006-la-grilla-son-lugares-abiertos-por-franjas.md).
 
+### `AgendaModule` — qué está ocupado
+
+- **Qué ofrece**: `AgendaService.ocupadoDelDia(fecha, lugarIds)` → los tramos
+  reservados de cada mesa ese día. **No tiene controller**: nadie de afuera le
+  habla directo.
+- **De qué depende**: solo de `PrismaModule`. Es dueño de `Clienta`, `Reserva` y
+  `ReservaExtra`.
+- **Por qué existe**: es el único que lee `Reserva`, así "qué está ocupado" se
+  contesta en un solo lugar, y la disponibilidad y la reserva le preguntan sin
+  depender una de otra.
+
+Ver [`adr/008-la-agenda-es-duena-de-las-reservas.md`](adr/008-la-agenda-es-duena-de-las-reservas.md).
+
+### `DisponibilidadModule` — en qué horarios entra
+
+- **Qué responde**: `POST /disponibilidad` con lo que armó la clienta y la
+  `fecha` → los horarios de ese día donde el turno entra completo, con su inicio
+  y su fin. No dice en qué mesa.
+- **De qué depende**: de `TurnosModule` (cuánto dura), `GrillaModule` (qué está
+  abierto) y `AgendaModule` (qué está ocupado). **No importa `PrismaModule`**:
+  no tiene cuenta propia que no sea cruzar lo que le contestan.
+- **Cómo cruza**: lo libre de cada mesa es lo abierto menos lo reservado —la
+  misma resta que usa la grilla para los cierres—. Se prueban inicios **cada 30
+  minutos alineados al reloj** (9:00, 9:30) y se ofrece cada uno donde el turno
+  **termina antes de que cierre el hueco** en alguna mesa.
+- **Las reglas del salón**: se reserva desde ahora hasta **45 días** adelante,
+  sin anticipación mínima —si la mesa está abierta, hay quien atiende—. "Ahora"
+  es la hora de **Argentina**, aunque el servidor corra en UTC. El paso y los 45
+  días son constantes en `horarios.ts`.
+- **Contesta `200` aunque sea `POST`**, como el armado: es una consulta con
+  cuerpo.
+
 ## Los módulos previstos
 
 Salen del alcance del MVP (`propuesta.md`, punto 2.3). Cada uno responde **una**
@@ -197,8 +240,7 @@ pregunta:
 
 | Módulo | La pregunta que responde |
 |---|---|
-| `DisponibilidadModule` | ¿En qué horarios entra completo **este** turno armado? |
-| `ReservasModule` | Tomar el horario. Que no se lo lleven dos ya lo garantiza la base (ADR-007); el módulo traduce el rechazo en "ese horario se acaba de ocupar" |
+| `ReservasModule` | Tomar el horario: arma el turno, le pregunta a la disponibilidad si entra y en qué mesa, y lo guarda en la agenda. Que no se lo lleven dos ya lo garantiza la base (ADR-007); el módulo traduce el rechazo en "ese horario se acaba de ocupar" |
 
 ## Las tablas que existen hoy — el catálogo
 
@@ -269,8 +311,8 @@ hora ni zona horaria.
 
 ## Las tablas de la reserva
 
-Migración `20260925140051_reservas`. Las tablas existen; el módulo que las usa,
-`ReservasModule`, es de la entrega 3.
+Migración `20260925140051_reservas`. Las tablas son de `AgendaModule` (ADR-008),
+que hoy solo las lee; guardar una reserva llega con `ReservasModule`.
 
 | Tabla | Qué guarda |
 |---|---|
@@ -340,8 +382,9 @@ El camino completo, para tenerlo a la vista mientras se construye:
 1. La clienta arma su turno → `CatalogoModule` da los servicios;
    `TurnosModule` calcula precio y duración.
 2. Pide ver los horarios → `DisponibilidadModule` cruza la duración del turno
-   con la grilla del día y con los turnos ya tomados.
-3. Elige uno y confirma → `ReservasModule` lo guarda; la base rechaza el
-   segundo intento sobre el mismo horario.
+   con la grilla del día y con lo que `AgendaModule` dice que está tomado.
+3. Elige uno y confirma → `ReservasModule` vuelve a preguntar si entra y lo
+   guarda en la agenda; la base rechaza el segundo intento sobre el mismo
+   horario.
 4. Ve el comprobante → sale de lo que quedó guardado, no de lo que la pantalla
    creía.
