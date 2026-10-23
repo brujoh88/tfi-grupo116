@@ -78,7 +78,7 @@ graph TD
         Grilla["GrillaModule<br/>qué está abierto ese día"]
         Disp["DisponibilidadModule<br/>en qué horarios entra"]
         Agenda["AgendaModule<br/>qué está ocupado"]
-        Reservas["ReservasModule<br/>(previsto)"]
+        Reservas["ReservasModule<br/>tomar el horario"]
         Prisma["PrismaModule<br/>la conexión"]
     end
 
@@ -92,6 +92,8 @@ graph TD
     Grilla --> Prisma
     Grilla --> Salon
     Agenda --> Prisma
+    Agenda --> Salon
+    Reservas --> Turnos
     Reservas --> Disp
     Reservas --> Agenda
     Prisma --> DB[("PostgreSQL")]
@@ -204,10 +206,17 @@ Ver [`adr/006-la-grilla-son-lugares-abiertos-por-franjas.md`](adr/006-la-grilla-
 ### `AgendaModule` — qué está ocupado
 
 - **Qué ofrece**: `AgendaService.ocupadoDelDia(fecha, lugarIds)` → los tramos
-  reservados de cada mesa ese día. **No tiene controller**: nadie de afuera le
-  habla directo.
-- **De qué depende**: solo de `PrismaModule`. Es dueño de `Clienta`, `Reserva` y
-  `ReservaExtra`.
+  reservados de cada mesa ese día; y `guardar(reserva)`, que guarda la clienta
+  y la reserva con sus extras en una sola transacción. **No tiene controller**:
+  nadie de afuera le habla directo.
+- **De qué depende**: de `PrismaModule` y de `SalonModule` (la clienta es de un
+  salón). Es dueño de `Clienta`, `Reserva` y `ReservaExtra`.
+- **La clienta**: el teléfono se lleva a una sola forma con `libphonenumber-js`,
+  más una regla propia que saca el 9 de celular, así "11 5555-1234" y
+  "+54 9 11 5555 1234" son la misma. Si el teléfono ya existe, gana el último
+  nombre ([PDR-006](pdr/006-la-clienta-se-identifica-por-telefono.md)).
+- **Si la base rechaza la reserva por superposición** (ADR-007), lo avisa con un
+  error propio, sin HTTP: decidir qué contestar es del trámite.
 - **Por qué existe**: es el único que lee `Reserva`, así "qué está ocupado" se
   contesta en un solo lugar, y la disponibilidad y la reserva le preguntan sin
   depender una de otra.
@@ -234,14 +243,24 @@ Ver [`adr/008-la-agenda-es-duena-de-las-reservas.md`](adr/008-la-agenda-es-duena
 - **Contesta `200` aunque sea `POST`**, como el armado: es una consulta con
   cuerpo.
 
-## Los módulos previstos
+### `ReservasModule` — tomar el horario
 
-Salen del alcance del MVP (`propuesta.md`, punto 2.3). Cada uno responde **una**
-pregunta:
-
-| Módulo | La pregunta que responde |
-|---|---|
-| `ReservasModule` | Tomar el horario: arma el turno, le pregunta a la disponibilidad si entra y en qué mesa, y lo guarda en la agenda. Que no se lo lleven dos ya lo garantiza la base (ADR-007); el módulo traduce el rechazo en "ese horario se acaba de ocupar" |
+- **Qué responde**: `POST /reservas` con lo armado, la `fecha`, el `inicio`, el
+  nombre, el teléfono y el `total` que vio la clienta → `201` con el
+  comprobante. No guarda nada propio: no es dueño de ninguna tabla.
+- **De qué depende**: de `TurnosModule` (el armado con sus precios),
+  `DisponibilidadModule` (si el horario entra y en qué mesas) y `AgendaModule`
+  (guardar). Le pide el armado a turnos y no a la disponibilidad: el precio sale
+  siempre del mismo lugar.
+- **El precio se congela al confirmar**: si el total recalculado no es el que
+  vio la clienta, contesta `409` y no reserva
+  ([PDR-004](pdr/004-el-turno-guarda-copia-del-precio.md)).
+- **La mesa**: si el horario entra en varias, va a la de número más chico; si
+  la base la rebota porque otra clienta la tomó un instante antes, prueba la
+  siguiente. Si rebotan todas, `409` — ese horario se acaba de ocupar.
+- **No hay endpoint para volver a ver una reserva**: con números correlativos,
+  cualquiera vería los datos de otra clienta. El comprobante es la respuesta de
+  la confirmación.
 
 ## Las tablas que existen hoy — el catálogo
 
@@ -379,8 +398,8 @@ Cierra lo que el ADR-001 dejó abierto.
 ## El recorrido de una reserva
 
 Es el proceso crítico del negocio. El ejemplo: una clienta arma un **soft gel
-con francesita y retiro** —2 h 15— para el martes, y reserva a las 15. Los pasos
-1 y 2 están construidos; el 3, **previsto**.
+con francesita y retiro** —2 h 15— para el martes, y reserva a las 15. Los tres
+pasos están construidos.
 
 ```mermaid
 sequenceDiagram
@@ -391,7 +410,7 @@ sequenceDiagram
     participant D as DisponibilidadModule
     participant G as GrillaModule
     participant A as AgendaModule
-    participant R as ReservasModule (previsto)
+    participant R as ReservasModule
     participant DB as PostgreSQL
 
     Note over C,Cat: 1. Arma el turno
@@ -410,20 +429,22 @@ sequenceDiagram
     A-->>D: los tramos ya reservados
     D-->>C: de 9:00 a 10:30 y de 15:00 a 16:30, cada media hora
 
-    Note over C,DB: 3. Reserva a las 15 (previsto)
-    C->>R: POST /reservas (armado + martes 15:00 + nombre y teléfono)
-    R->>D: ¿entra este armado a las 15? ¿en qué mesa?
-    D-->>R: sí, mesa 1
-    R->>A: guardar la reserva, con los precios copiados
-    A->>DB: INSERT en Reserva y ReservaExtra
-    alt otra clienta tomó ese tramo un instante antes
+    Note over C,DB: 3. Reserva a las 15
+    C->>R: POST /reservas (armado + martes 15:00 + nombre, teléfono y total visto)
+    R->>T: ¿cuánto sale hoy este armado?
+    T-->>R: el mismo total que vio la clienta
+    R->>D: ¿entra este armado a las 15? ¿en qué mesas?
+    D-->>R: sí, mesas 1 y 2
+    R->>A: guardar en la mesa 1, con los precios copiados
+    A->>DB: INSERT en Clienta, Reserva y ReservaExtra
+    alt otra clienta tomó la mesa 1 un instante antes
         DB-->>A: rechazo de la restricción EXCLUDE
         A-->>R: el horario está ocupado
-        R-->>C: 409 — ese horario se acaba de ocupar
-    else el tramo sigue libre
-        DB-->>A: guardada
-        R-->>C: 201 — el comprobante, con lo que quedó guardado
+        R->>A: guardar en la mesa 2
+        Note over R,DB: si rebotan todas: 409 — ese horario se acaba de ocupar
     end
+    DB-->>A: guardada
+    R-->>C: 201 — el comprobante, con lo que quedó guardado
 ```
 
 Lo que el diagrama deja ver:

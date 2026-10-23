@@ -4,6 +4,7 @@ import { CatalogoModule } from './catalogo/catalogo.module';
 import { DisponibilidadModule } from './disponibilidad/disponibilidad.module';
 import { GrillaModule } from './grilla/grilla.module';
 import { HealthModule } from './health/health.module';
+import { ReservasModule } from './reservas/reservas.module';
 import { TurnosModule } from './turnos/turnos.module';
 
 @Module({
@@ -14,6 +15,7 @@ import { TurnosModule } from './turnos/turnos.module';
     TurnosModule,
     GrillaModule,
     DisponibilidadModule,
+    ReservasModule,
   ],
 })
 export class AppModule {}

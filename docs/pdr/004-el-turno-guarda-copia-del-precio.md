@@ -45,9 +45,13 @@ Permite reconstruir la lista de precios de cualquier fecha. Se descartó porque
 saber cuál se aplicó. La pregunta real era si, además de la copia, hacía falta
 versionar, y la evolución de precios no está en el alcance del MVP.
 
-## Qué queda abierto
+## Qué se decidió después
 
-- **En qué momento exacto se copia.** Si el salón cambia un precio entre que la
-  clienta arma el turno y lo confirma, el total al confirmar puede no ser el que
-  vio al armar. Se decide al construir la reserva
+- **El precio se congela al confirmar, contra el que vio la clienta**
+  (23/10). La pantalla manda el total que mostró; la API recalcula el armado y,
+  si no coincide, no reserva y contesta que el precio cambió. Así nunca se
+  guarda un precio distinto del que la clienta confirmó, y el que se guarda lo
+  calcula siempre la API. Se descartó guardar el del catálogo sin comparar —la
+  clienta se enteraría en el comprobante— y respetar el precio del momento de
+  armar, que obligaría a guardar el armado
   ([ADR-005](../adr/005-el-turno-armado-se-calcula.md)).

@@ -50,9 +50,14 @@ tenga.
 **Registro con usuario y contraseña.** Lo descarta la propuesta desde el
 principio: es la fricción que el proyecto quiere sacar.
 
-## Qué queda abierto
+## Qué se decidió después
 
-- **Normalizar el teléfono**, para que "11 5555-1234" y "+54 9 11 5555 1234"
-  sean la misma clienta.
-- **Qué pasa si el mismo teléfono llega con otro nombre.** Se decide al
-  construir la reserva.
+- **El teléfono se normaliza con `libphonenumber-js`, la librería de
+  referencia, más una regla propia** (23/10): sacar el 9 que va después del
+  +54. Es el prefijo para llamar a un celular desde el exterior, y la librería
+  lo conserva en unos formatos y en otros no. Se descartó escribir el parsing
+  argentino entero, que habría que probar y defender paso por paso.
+- **Si el mismo teléfono llega con otro nombre, gana el último.**
+- **Una clienta puede tener turnos que se superponen en mesas distintas**: una
+  mamá que reserva para ella y para su hija deja el mismo teléfono. Que dos
+  turnos no se pisen en la misma mesa ya lo garantiza la base.
