@@ -6,6 +6,31 @@ Repositorio: https://github.com/brujoh88/tfi-grupo116
 
 Sistema de turnos para un salón de estética.
 
+## Índice
+
+- [1. El problema](#1-el-problema)
+  - [Contexto](#contexto)
+  - [A quiénes afecta](#a-quiénes-afecta)
+  - [El impacto](#el-impacto)
+  - [¿Admite una solución tecnológica?](#admite-una-solución-tecnológica)
+  - [Validación del problema](#validación-del-problema)
+- [2. La solución propuesta](#2-la-solución-propuesta)
+  - [2.1 Qué hace](#21-qué-hace)
+  - [2.2 Qué valor agrega](#22-qué-valor-agrega)
+  - [2.3 Alcance del MVP](#23-alcance-del-mvp)
+  - [2.4 Diferenciación](#24-diferenciación)
+- [3. Stack tecnológico](#3-stack-tecnológico)
+  - [Por qué](#por-qué)
+  - [Alternativas descartadas](#alternativas-descartadas)
+  - [Riesgos de esta elección](#riesgos-de-esta-elección)
+- [4. Plan de trabajo](#4-plan-de-trabajo)
+  - [4.1 Objetivos y su medición](#41-objetivos-y-su-medición)
+  - [4.2 Etapas y entregables](#42-etapas-y-entregables)
+  - [4.3 Estimación de horas](#43-estimación-de-horas)
+  - [4.4 Riesgos y mitigaciones](#44-riesgos-y-mitigaciones)
+  - [4.5 Plan de contingencia](#45-plan-de-contingencia)
+- [5. Repositorio](#5-repositorio)
+
 ---
 
 ## 1. El problema
@@ -102,7 +127,7 @@ No es la agenda de papel puesta en una pantalla. Concretamente:
 
 | Queda afuera | Por qué |
 |---|---|
-| **Cobro de la seña con Mercado Pago** | Resuelve el ausentismo, que es otro problema. Además la cuenta del salón es de un tercero: es la única dependencia externa que podría bloquearnos. Queda como evolución del producto |
+| **Cobro de la seña con Mercado Pago** | Resuelve el ausentismo, que es otro problema. Además la cuenta del salón es de un tercero: es la única dependencia externa que podría bloquearnos. Queda como evolución del producto ([PDR-001](pdr/001-la-sena-queda-fuera-del-mvp.md)) |
 | **Retención temporal del horario** | Existe para sostener un pago en curso. Sin cobro no hace falta: la reserva se completa y se confirma en el mismo momento |
 | **Avisos automáticos por WhatsApp** | La API oficial se paga por conversación y requiere aprobación de Meta |
 | **Ficha e historial de la clienta** | El salón sigue funcionando sin eso |
