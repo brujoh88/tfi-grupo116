@@ -18,8 +18,9 @@ escribe la plantilla, y cómo se guardan las excepciones.
 ## Decisión
 
 **El recurso es el lugar físico** —una mesa de uñas, una camilla—, no la persona
-que atiende. Lo que limita cuántos turnos entran a la vez es si hay un lugar
-libre. Qué servicio se hace en qué lugar va en una tabla de vínculo, una fila por
+que atiende. Es una decisión de producto y su porqué está en el
+[PDR-005](../pdr/005-el-recurso-es-el-lugar.md); acá importa cómo se guarda. Qué
+servicio se hace en qué lugar va en una tabla de vínculo, una fila por
 combinación, como `ServicioExtra` en el catálogo: con dos mesas de uñas, el soft
 gel se vincula a las dos.
 
@@ -47,21 +48,15 @@ Cuatro tablas: `Lugar`, `LugarServicio`, `Franja` y `Excepcion`, todas de
 
 **En contra — asumido a conciencia**
 
-- **El horario del lugar lleva implícito el de quien lo atiende.** Si la mesa
-  figura abierta de 9 a 18 es porque hay alguien para atenderla. Si esa persona
-  falta, la dueña cierra el horario con una excepción; el sistema no sabe por qué.
+- **El horario del lugar lleva implícito el de quien lo atiende**
+  ([PDR-005](../pdr/005-el-recurso-es-el-lugar.md)): si esa persona falta, la
+  dueña cierra el horario con una excepción.
 - Sumar un servicio nuevo obliga a vincularlo con cada lugar que lo hace.
 - Los controles de que el día esté entre 0 y 6 y de que una franja empiece antes
   de terminar son `CHECK` escritos a mano en la migración: Prisma no los expresa y
   no se ven en `schema.prisma`, que lo avisa con un comentario.
 
 ## Las alternativas consideradas
-
-**El recurso es la persona.** Cada profesional con su agenda y sus servicios. Se
-descartó porque el salón tiene pocas profesionales y cruzar la agenda de la
-persona con la del lugar es trabajo que hoy no resuelve nada. Cuando el salón
-crezca, se suma la agenda del personal asignada a un lugar; la grilla de lugares
-no se tira, pasa a ser una de las dos condiciones.
 
 **Horarios fijos del largo del servicio más largo** —"lunes a las 9, 10:30,
 12…"—. Es como piensa hoy la dueña, porque es lo que publica en la imagen, y es lo

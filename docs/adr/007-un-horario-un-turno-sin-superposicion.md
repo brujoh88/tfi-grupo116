@@ -30,8 +30,9 @@ segunda **espera** a que la primera se confirme y ahí rebota. El módulo de
 reservas traduce ese rechazo en "ese horario se acaba de ocupar".
 
 Las reservas guardan además a la clienta —una tabla propia, identificada por
-teléfono dentro del salón, sin historial—, lo que armó con el **precio de cada
-ítem copiado** al momento de reservar, y el día y las horas como la grilla:
+teléfono dentro del salón, sin historial ([PDR-006](../pdr/006-la-clienta-se-identifica-por-telefono.md))—,
+lo que armó con el **precio de cada ítem copiado** al momento de reservar
+([PDR-004](../pdr/004-el-turno-guarda-copia-del-precio.md)), y el día y las horas como la grilla:
 fecha sin hora, inicio y fin en minutos desde la medianoche. La duración no se
 guarda aparte: es fin menos inicio.
 
@@ -71,7 +72,7 @@ guardan.
 
 ## Qué queda abierto
 
-- **Normalizar el teléfono** para que "11 5555-1234" y "+54 9 11 5555 1234" sean
-  la misma clienta. Es del módulo, pero condiciona la unicidad.
+- **Normalizar el teléfono** ([PDR-006](../pdr/006-la-clienta-se-identifica-por-telefono.md)).
+  Es del módulo, pero condiciona la unicidad.
 - **Qué pasa con las reservas de un horario que la dueña cierra** (ADR-006).
 - **Cuándo se congela el precio** (ADR-005): la copia se hace al reservar.
