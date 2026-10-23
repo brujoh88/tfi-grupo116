@@ -11,6 +11,14 @@ async function bootstrap() {
   // convierte el JSON crudo en la clase del DTO para que los decoradores corran.
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
+  // Qué páginas puede usar el navegador para hablarle a la API: solo las
+  // nuestras. Lo aplica el navegador, no es un candado: `curl` entra igual.
+  const origenes = (process.env.CORS_ORIGENES ?? '')
+    .split(',')
+    .map((origen) => origen.trim())
+    .filter(Boolean);
+  app.enableCors({ origin: origenes });
+
   const configuracion = new DocumentBuilder()
     .setTitle('API de turnos')
     .setDescription(
