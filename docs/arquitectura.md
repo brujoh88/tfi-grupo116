@@ -229,7 +229,8 @@ Ver [`adr/008-la-agenda-es-duena-de-las-reservas.md`](adr/008-la-agenda-es-duena
 - **Las reglas del salón**: se reserva desde ahora hasta **45 días** adelante,
   sin anticipación mínima —si la mesa está abierta, hay quien atiende—. "Ahora"
   es la hora de **Argentina**, aunque el servidor corra en UTC. El paso y los 45
-  días son constantes en `horarios.ts`.
+  días son constantes en `horarios.ts`. Por qué esos números:
+  [PDR-007](pdr/007-cuando-se-puede-reservar.md).
 - **Contesta `200` aunque sea `POST`**, como el armado: es una consulta con
   cuerpo.
 
@@ -375,16 +376,68 @@ Cierra lo que el ADR-001 dejó abierto.
    `where`. Los filtros, el orden y el aislamiento por salón se prueban de punta
    a punta, contra una base con datos.
 
-## El recorrido de una reserva *(previsto)*
+## El recorrido de una reserva
 
-El camino completo, para tenerlo a la vista mientras se construye:
+Es el proceso crítico del negocio. El ejemplo: una clienta arma un **soft gel
+con francesita y retiro** —2 h 15— para el martes, y reserva a las 15. Los pasos
+1 y 2 están construidos; el 3, **previsto**.
 
-1. La clienta arma su turno → `CatalogoModule` da los servicios;
-   `TurnosModule` calcula precio y duración.
-2. Pide ver los horarios → `DisponibilidadModule` cruza la duración del turno
-   con la grilla del día y con lo que `AgendaModule` dice que está tomado.
-3. Elige uno y confirma → `ReservasModule` vuelve a preguntar si entra y lo
-   guarda en la agenda; la base rechaza el segundo intento sobre el mismo
-   horario.
-4. Ve el comprobante → sale de lo que quedó guardado, no de lo que la pantalla
-   creía.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Clienta (pantallas)
+    participant T as TurnosModule
+    participant Cat as CatalogoModule
+    participant D as DisponibilidadModule
+    participant G as GrillaModule
+    participant A as AgendaModule
+    participant R as ReservasModule (previsto)
+    participant DB as PostgreSQL
+
+    Note over C,Cat: 1. Arma el turno
+    C->>T: POST /turnos/armado (soft gel + francesita + retiro)
+    T->>Cat: precios y duraciones de lo elegido
+    Cat-->>T: cada ítem, si está activo y la combinación vale
+    T-->>C: precio total y 135 minutos
+
+    Note over C,A: 2. Pide los horarios del martes
+    C->>D: POST /disponibilidad (el mismo armado + fecha)
+    D->>T: ¿cuánto dura?
+    T-->>D: 135 minutos
+    D->>G: ¿qué mesas hacen soft gel y qué tienen abierto el martes?
+    G-->>D: mesas de uñas 1 y 2, de 9 a 13 y de 15 a 19
+    D->>A: ¿qué está ocupado en esas mesas?
+    A-->>D: los tramos ya reservados
+    D-->>C: de 9:00 a 10:30 y de 15:00 a 16:30, cada media hora
+
+    Note over C,DB: 3. Reserva a las 15 (previsto)
+    C->>R: POST /reservas (armado + martes 15:00 + nombre y teléfono)
+    R->>D: ¿entra este armado a las 15? ¿en qué mesa?
+    D-->>R: sí, mesa 1
+    R->>A: guardar la reserva, con los precios copiados
+    A->>DB: INSERT en Reserva y ReservaExtra
+    alt otra clienta tomó ese tramo un instante antes
+        DB-->>A: rechazo de la restricción EXCLUDE
+        A-->>R: el horario está ocupado
+        R-->>C: 409 — ese horario se acaba de ocupar
+    else el tramo sigue libre
+        DB-->>A: guardada
+        R-->>C: 201 — el comprobante, con lo que quedó guardado
+    end
+```
+
+Lo que el diagrama deja ver:
+
+- **Nadie recalcula lo que ya sabe otro.** La duración la da siempre
+  `TurnosModule`, y lo ocupado, siempre `AgendaModule`.
+- **La reserva vuelve a preguntar** en el paso 3, aunque la pantalla ya haya
+  mostrado el horario: entre el paso 2 y el 3 pudo reservar otra persona, y lo
+  que manda el navegador no es confiable.
+- **La última palabra la tiene la base** ([ADR-007](adr/007-un-horario-un-turno-sin-superposicion.md)).
+  Si dos clientas confirman en el mismo instante, la pregunta del paso 3 les
+  contesta "sí" a las dos; la segunda escritura rebota.
+- **El comprobante sale de lo guardado**, no de lo que la pantalla creía, con el
+  precio copiado al reservar ([PDR-004](pdr/004-el-turno-guarda-copia-del-precio.md)).
+
+Abierto hasta construir la reserva: **qué mesa elige** si entra en varias, y **en
+qué momento se congela el precio** ([ADR-005](adr/005-el-turno-armado-se-calcula.md)).

@@ -1,7 +1,7 @@
 # Base de datos
 
-PostgreSQL, con el esquema gestionado por Prisma. El diagrama entidad-relación
-está en [`docs/diagrama-er.md`](../docs/diagrama-er.md).
+PostgreSQL, con el esquema gestionado por Prisma. El diagrama de la base
+está en [`docs/modelo-de-datos.md`](../docs/modelo-de-datos.md).
 
 | Archivo | Qué es |
 |---|---|
