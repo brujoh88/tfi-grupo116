@@ -39,6 +39,7 @@ descartadas.
 | [006](adr/006-la-grilla-son-lugares-abiertos-por-franjas.md) | La grilla son lugares abiertos por franjas, no horarios fijos |
 | [007](adr/007-un-horario-un-turno-sin-superposicion.md) | "Un horario, un turno" lo garantiza la base con una restricción de no superposición |
 | [008](adr/008-la-agenda-es-duena-de-las-reservas.md) | Las reservas se parten en agenda (dueña de las tablas) y reserva (el trámite), para que la disponibilidad no quede en un círculo |
+| [009](adr/009-el-front-toma-la-forma-de-la-api-de-su-swagger.md) | El frontend toma la forma de las respuestas del Swagger de la API, no de una copia ni del código del backend |
 
 ### De producto (PDR)
 

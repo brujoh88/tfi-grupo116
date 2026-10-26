@@ -12,10 +12,21 @@ La decisión de fondo —por qué son dos aplicaciones y no una— está en
 | Aplicación | Qué es | Qué hace |
 |---|---|---|
 | `backend/` | API en NestJS | Contesta preguntas y guarda decisiones. **Toda regla de negocio vive acá** |
-| `frontend/` *(previsto)* | React con Vite | Muestra y pregunta. No calcula nada del negocio |
+| `frontend/` | React con Vite | Muestra y pregunta. No calcula nada del negocio |
 
 Se comunican **solo por HTTP**. El frontend nunca importa código del backend: si
 lo hiciera, dejarían de ser dos aplicaciones aunque las carpetas siguieran ahí.
+
+**Cómo se respeta del lado del frontend:**
+- **Un solo archivo le habla a la API** (`frontend/src/api/api.ts`). Las
+  pantallas llaman a sus funciones y no conocen URLs.
+- **La forma de las respuestas sale del Swagger de la API**, generada con
+  `npm run tipos`, no copiada del backend
+  ([ADR-009](adr/009-el-front-toma-la-forma-de-la-api-de-su-swagger.md)).
+- **El total se le pregunta a la API**: la pantalla de armar pide
+  `POST /turnos/armado` cada vez que la clienta cambia algo, en vez de sumar
+  precios (regla de "una regla en un solo lugar").
+- **La API solo atiende al navegador desde nuestros orígenes** (`CORS_ORIGENES`).
 
 ## Qué arquitectura es esta
 
@@ -67,7 +78,7 @@ Se actualiza al agregar un módulo.
 
 ```mermaid
 graph TD
-    Pantallas["Pantallas de la clienta<br/>(previsto)"] -->|HTTP| API
+    Pantallas["Pantallas de la clienta<br/>(en construcción)"] -->|HTTP| API
     Panel["Panel del salón<br/>(previsto)"] -->|HTTP| API
 
     subgraph API["API — NestJS"]
