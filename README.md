@@ -65,6 +65,7 @@ backend/             la API en NestJS
     grilla/          qué tiene abierto cada lugar un día
     health/          endpoint de estado
     prisma/          la conexión a la base
+    reservas/        el trámite de reservar un horario
     salon/           a qué salón sirve la API
     turnos/          cuánto sale y cuánto dura un turno armado
 database/            el DDL completo del esquema, generado de las migraciones
@@ -72,7 +73,9 @@ docs/                la documentación del proyecto; empieza en docs/README.md
   adr/               las decisiones de arquitectura, con su porqué
   pdr/               las decisiones de producto, con su porqué
   diagramas/         el diagrama de la base, editable en draw.io
-frontend/            las pantallas en React con Vite (tercera etapa)
+frontend/            las pantallas en React con Vite
+  src/api/           el único lugar que le habla a la API, y sus tipos
+  src/pantallas/     una por ruta: armar el turno, elegir día y hora…
 docker-compose.yml   PostgreSQL para desarrollo
 ```
 
@@ -111,6 +114,15 @@ curl http://localhost:3000/health
 
 Esa respuesta significa que la API levantó **y** que pudo consultar la base.
 
+Las pantallas, en otra terminal y con la API corriendo:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local   # dónde está la API
+npm run dev                  # http://localhost:5173
+```
+
 La API se prueba entera en **http://localhost:3000/docs**, sin frontend: cada
 endpoint se ejecuta desde ahí. Las rutas y lo que devuelve cada una se generan
 desde el código en cada compilación, así que reflejan lo que está corriendo.
@@ -138,6 +150,14 @@ desde el código en cada compilación, así que reflejan lo que está corriendo.
 | `npm run build` | Compila a `dist/` |
 | `npm run test:e2e` | Prueba que `/health` responda contra la base real |
 | `npx prisma generate` | Regenera el cliente de Prisma |
+
+En `frontend/`:
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Las pantallas, recargando al guardar |
+| `npm run build` | Compila a `dist/`, controlando los tipos |
+| `npm run tipos` | Regenera los tipos de la API desde su Swagger; necesita la API corriendo (`API_URL=…` si no está en el 3000) |
 
 ## Equipo
 

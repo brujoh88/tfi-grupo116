@@ -1,15 +1,30 @@
 # Frontend
 
-Las pantallas de la clienta y el panel del salón, en **React con Vite**. Se
-construyen en la tercera etapa (punto 4.2 de la [propuesta](../docs/propuesta.md)).
+Las pantallas de la clienta y el panel del salón, en **React con Vite**,
+TypeScript y Tailwind. Pensadas para el celular.
 
 Es una aplicación separada de la API: se comunica con ella solo por HTTP y no
 calcula nada del negocio —pregunta—. El porqué está en el
 [ADR-001](../docs/adr/001-dos-aplicaciones-separadas.md).
 
-Lo que va a tener, según el [listado de módulos](../docs/modulos.md):
+## Cómo está armado
 
-- **Pantallas de la clienta**: armar el turno, elegir día y hora, confirmar, y el
-  comprobante. Pensadas para el celular.
-- **Panel del salón**: ver el día y abrir o cerrar horarios, detrás de la clave
-  del salón.
+- **Una ruta por pantalla** (`react-router`), para que "atrás" en el celular
+  vuelva al paso anterior en vez de sacar a la clienta del sitio. Lo que va
+  eligiendo vive en `App.tsx`, arriba de las rutas.
+- **`src/api/api.ts` es el único lugar que le habla a la API.** La dirección sale
+  de `VITE_API_URL` (ver `.env.example`).
+- **Los tipos de lo que contesta la API no se escriben a mano**: `src/api/esquema.ts`
+  se genera desde el Swagger con `npm run tipos`. El porqué está en el
+  [ADR-009](../docs/adr/009-el-front-toma-la-forma-de-la-api-de-su-swagger.md).
+
+## Las pantallas
+
+| Ruta | Pantalla | Estado |
+|---|---|---|
+| `/armar` | Armar el turno, con el total en vivo | Hecha |
+| `/horario` | Elegir día y hora | Prevista |
+| — | Confirmar y comprobante | Previstas |
+| — | Panel del salón, con su clave | Previsto |
+
+Para levantarlo, ver la instalación en el [README](../README.md#instalación).
