@@ -23,8 +23,13 @@ calcula nada del negocio —pregunta—. El porqué está en el
 | Ruta | Pantalla | Estado |
 |---|---|---|
 | `/armar` | Armar el turno, con el total en vivo | Hecha |
-| `/horario` | Elegir día y hora | Prevista |
-| — | Confirmar y comprobante | Previstas |
+| `/horario` | Elegir día y hora, con el calendario del celular | Hecha |
+| `/confirmar` | Nombre y teléfono, reservar, y el comprobante como aviso en la misma pantalla | Hecha |
 | — | Panel del salón, con su clave | Previsto |
+
+Si se recarga la página en `/horario` o `/confirmar`, lo elegido se perdió (vive
+en memoria) y vuelve a `/armar`.
+
+Online: https://tfi-grupo116.vercel.app
 
 Para levantarlo, ver la instalación en el [README](../README.md#instalación).
