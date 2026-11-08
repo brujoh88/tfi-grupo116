@@ -148,7 +148,7 @@ desde el código en cada compilación, así que reflejan lo que está corriendo.
 |---|---|
 | `npm run start:dev` | La API, recargando al guardar |
 | `npm run build` | Compila a `dist/` |
-| `npm run test:e2e` | Prueba que `/health` responda contra la base real |
+| `npm run test:e2e` | Contra la base local con el seed: que `/health` responda, y que tres reservas simultáneas al mismo horario con dos mesas libres dejen entrar a dos y rebotar a la tercera ("un horario, un turno", ADR-007) |
 | `npx prisma generate` | Regenera el cliente de Prisma |
 
 En `frontend/`:
