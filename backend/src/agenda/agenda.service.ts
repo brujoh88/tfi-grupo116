@@ -64,6 +64,31 @@ export class AgendaService {
   }
 
   /**
+   * Las reservas de un día, con su clienta, ordenadas por hora. Para el panel.
+   * Devuelve ids de lugar, servicio, extras y retiro: los nombres los saben la
+   * grilla y el catálogo, que son sus dueños (regla 2).
+   */
+  async reservasDelDia(fecha: string) {
+    return this.prisma.reserva.findMany({
+      where: {
+        fecha: new Date(`${fecha}T00:00:00Z`),
+        clienta: { salonId: this.salon.id() },
+      },
+      orderBy: [{ inicioMinuto: 'asc' }, { lugarId: 'asc' }],
+      select: {
+        id: true,
+        lugarId: true,
+        inicioMinuto: true,
+        finMinuto: true,
+        servicioId: true,
+        retiroId: true,
+        extras: { select: { extraId: true } },
+        clienta: { select: { nombre: true, telefono: true } },
+      },
+    });
+  }
+
+  /**
    * Guarda la reserva y su clienta, todo o nada. Si el teléfono ya es de una
    * clienta, se le pone el nombre que llegó: gana el último.
    *

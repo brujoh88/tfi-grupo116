@@ -4,6 +4,7 @@ import { CatalogoModule } from './catalogo/catalogo.module';
 import { DisponibilidadModule } from './disponibilidad/disponibilidad.module';
 import { GrillaModule } from './grilla/grilla.module';
 import { HealthModule } from './health/health.module';
+import { PanelModule } from './panel/panel.module';
 import { ReservasModule } from './reservas/reservas.module';
 import { TurnosModule } from './turnos/turnos.module';
 
@@ -16,6 +17,7 @@ import { TurnosModule } from './turnos/turnos.module';
     GrillaModule,
     DisponibilidadModule,
     ReservasModule,
+    PanelModule,
   ],
 })
 export class AppModule {}

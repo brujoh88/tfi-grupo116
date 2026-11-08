@@ -78,8 +78,8 @@ Se actualiza al agregar un módulo.
 
 ```mermaid
 graph TD
-    Pantallas["Pantallas de la clienta<br/>(en construcción)"] -->|HTTP| API
-    Panel["Panel del salón<br/>(previsto)"] -->|HTTP| API
+    Pantallas["Pantallas de la clienta<br/>armar, día y hora, confirmar"] -->|HTTP| API
+    PanelUI["Panel del salón<br/>ver el día, abrir horarios"] -->|HTTP| API
 
     subgraph API["API — NestJS"]
         Health["HealthModule<br/>¿está todo vivo?"]
@@ -90,6 +90,7 @@ graph TD
         Disp["DisponibilidadModule<br/>en qué horarios entra"]
         Agenda["AgendaModule<br/>qué está ocupado"]
         Reservas["ReservasModule<br/>tomar el horario"]
+        PanelM["PanelModule<br/>lo de la dueña, con clave"]
         Prisma["PrismaModule<br/>la conexión"]
     end
 
@@ -105,6 +106,9 @@ graph TD
     Agenda --> Prisma
     Agenda --> Salon
     Reservas --> Turnos
+    PanelM --> Agenda
+    PanelM --> Grilla
+    PanelM --> Catalogo
     Reservas --> Disp
     Reservas --> Agenda
     Prisma --> DB[("PostgreSQL")]
@@ -207,6 +211,9 @@ Ver [`adr/005-el-turno-armado-se-calcula.md`](adr/005-el-turno-armado-se-calcula
 - **Qué no hace**: no sabe de reservas. Dice qué está **abierto**, no qué está
   **libre**: eso es la disponibilidad, que le resta los turnos tomados. Si la
   grilla lo supiera, "está ocupado" se calcularía en dos módulos.
+- **Abre horarios**: `GrillaService.abrir()` guarda una excepción de tipo
+  "abre" para un lugar del salón; desde ahí, la disponibilidad la ofrece sola.
+  La usa el panel.
 - **Es el único que lee `LugarServicio`**: la disponibilidad le pregunta qué
   lugares hacen un servicio, no consulta la tabla (regla 2).
 - **La fecha se toma a medianoche UTC**, así el día de la semana no depende del
@@ -217,7 +224,9 @@ Ver [`adr/006-la-grilla-son-lugares-abiertos-por-franjas.md`](adr/006-la-grilla-
 ### `AgendaModule` — qué está ocupado
 
 - **Qué ofrece**: `AgendaService.ocupadoDelDia(fecha, lugarIds)` → los tramos
-  reservados de cada mesa ese día; y `guardar(reserva)`, que guarda la clienta
+  reservados de cada mesa ese día; `reservasDelDia(fecha)` → los turnos con su
+  clienta, para el panel (con ids: los nombres los saben sus dueños); y
+  `guardar(reserva)`, que guarda la clienta
   y la reserva con sus extras en una sola transacción. **No tiene controller**:
   nadie de afuera le habla directo.
 - **De qué depende**: de `PrismaModule` y de `SalonModule` (la clienta es de un
@@ -272,6 +281,22 @@ Ver [`adr/008-la-agenda-es-duena-de-las-reservas.md`](adr/008-la-agenda-es-duena
 - **No hay endpoint para volver a ver una reserva**: con números correlativos,
   cualquiera vería los datos de otra clienta. El comprobante es la respuesta de
   la confirmación.
+
+### `PanelModule` — lo de la dueña, detrás de la clave
+
+- **Qué responde**: `GET /panel/dia?fecha=` → cada lugar con sus tramos
+  abiertos y sus turnos (hora, clienta, teléfono, qué se hace); y
+  `POST /panel/aperturas` → abre un tramo de un lugar un día puntual y devuelve
+  el día como quedó.
+- **La puerta**: un guard (`ClaveGuard`) controla todo el módulo. El panel
+  manda la clave del salón en el encabezado `x-clave-panel` de cada pedido y se
+  compara con `PANEL_CLAVE`; si falta o no coincide, 401. Sin la variable
+  cargada, no entra nadie. Una sola clave, sin usuarios
+  ([PDR-003](pdr/003-el-panel-abre-y-cierra-horarios-con-una-clave.md)).
+- **De qué depende**: de `AgendaModule` (los turnos), `GrillaModule` (lo
+  abierto, y guardar la apertura) y `CatalogoModule` (los nombres). No es dueño
+  de ninguna tabla: una sola puerta para todo lo de la dueña, en vez de
+  endpoints con clave repartidos por los módulos dueños.
 
 ## Las tablas que existen hoy — el catálogo
 

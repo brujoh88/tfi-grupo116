@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SalonActualService } from '../salon/salon-actual.service';
 import { abiertoElDia } from './franjas';
@@ -62,6 +62,35 @@ export class GrillaService {
         ),
       })),
     };
+  }
+
+  /**
+   * La dueña abre un tramo de un lugar un día puntual, aunque la plantilla no lo
+   * tenga: es lo que el sistema anterior no le dejaba hacer (PDR-003). Se suma
+   * como una excepción; desde ahí, la disponibilidad ya lo ofrece sola.
+   */
+  async abrir(apertura: {
+    fecha: string;
+    lugarId: number;
+    desde: number;
+    hasta: number;
+  }): Promise<void> {
+    const lugar = await this.prisma.lugar.findFirst({
+      where: { id: apertura.lugarId, salonId: this.salon.id(), activo: true },
+      select: { id: true },
+    });
+    if (!lugar) {
+      throw new BadRequestException('Ese lugar no es del salón');
+    }
+    await this.prisma.excepcion.create({
+      data: {
+        lugarId: apertura.lugarId,
+        fecha: new Date(`${apertura.fecha}T00:00:00Z`),
+        desdeMinuto: apertura.desde,
+        hastaMinuto: apertura.hasta,
+        tipo: 'ABRE',
+      },
+    });
   }
 }
 

@@ -58,6 +58,11 @@ agrega.
   tiempo antes de la entrega final. Abrir es lo que el sistema anterior no
   dejaba hacer, y por eso es lo que se conserva. La base ya guarda las dos
   cosas (ADR-006): lo recortado es la pantalla y su endpoint, no el modelo.
+- **El panel se construyó con eso** (08/11): entrar con la clave, ver el día con
+  sus turnos, y abrir un horario. **La clave viaja en cada pedido**, en un
+  encabezado, y no se canjea por un token: con una sola clave y una sola
+  persona, un login con JWT sumaba una librería y un secreto más sin resolver
+  nada. Va por HTTPS; quien la conozca entra, como ya se asumía arriba.
 
 ## Relacionadas
 
