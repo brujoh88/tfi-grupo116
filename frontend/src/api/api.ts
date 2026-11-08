@@ -1,11 +1,13 @@
 // El único lugar del front que le habla a la API. Las pantallas llaman a estas
 // funciones y no saben de URLs, de `fetch` ni de cómo vienen los errores.
 import type {
+  AbrirHorario,
   ArmarTurno,
   Catalogo,
   Comprobante,
   ConsultarDisponibilidad,
   Disponibilidad,
+  DiaDelPanel,
   Reservar,
   TurnoArmado,
 } from './tipos'
@@ -28,10 +30,14 @@ export class ErrorDeLaApi extends Error {
   }
 }
 
-async function pedir<T>(ruta: string, cuerpo?: unknown): Promise<T> {
+async function pedir<T>(ruta: string, cuerpo?: unknown, clave?: string): Promise<T> {
+  const headers: Record<string, string> = {}
+  if (cuerpo !== undefined) headers['Content-Type'] = 'application/json'
+  // El panel manda la clave del salón en cada pedido (PDR-003).
+  if (clave !== undefined) headers['x-clave-panel'] = clave
   const respuesta = await fetch(`${API_URL}${ruta}`, {
     method: cuerpo === undefined ? 'GET' : 'POST',
-    headers: cuerpo === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers,
     body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
   })
   const datos = await respuesta.json()
@@ -53,3 +59,9 @@ export const consultarDisponibilidad = (consulta: ConsultarDisponibilidad) =>
 
 export const reservar = (pedido: Reservar) =>
   pedir<Comprobante>('/reservas', pedido)
+
+export const verDia = (fecha: string, clave: string) =>
+  pedir<DiaDelPanel>(`/panel/dia?fecha=${fecha}`, undefined, clave)
+
+export const abrirHorario = (apertura: AbrirHorario, clave: string) =>
+  pedir<DiaDelPanel>('/panel/aperturas', apertura, clave)

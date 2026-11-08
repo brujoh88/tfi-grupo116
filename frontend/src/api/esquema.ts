@@ -120,6 +120,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/panel/dia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * El día del salón para la dueña: cada lugar con los tramos que tiene
+         *     abiertos y los turnos tomados, con la clienta, su teléfono y qué se hace.
+         */
+        get: operations["PanelController_verDia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/panel/aperturas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Abre un tramo de un lugar un día puntual, aunque la plantilla no lo tenga.
+         *     Desde ese momento, la disponibilidad lo ofrece a las clientas. Contesta el
+         *     día como quedó.
+         */
+        post: operations["PanelController_abrir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -236,6 +277,36 @@ export interface components {
             retiro: components["schemas"]["Opcion"] | null;
             /** @description Lo que sale el turno completo, en pesos enteros. */
             precio: number;
+        };
+        ReservaDelPanel: {
+            id: number;
+            inicio: number;
+            fin: number;
+            clienta: string;
+            telefono: string;
+            servicio: string;
+            extras: string[];
+            retiro: string | null;
+        };
+        LugarDelPanel: {
+            id: number;
+            nombre: string;
+            /** @description Sin tramos, ese día está cerrado. */
+            tramos: components["schemas"]["TramoAbierto"][];
+            reservas: components["schemas"]["ReservaDelPanel"][];
+        };
+        DiaDelPanel: {
+            fecha: string;
+            lugares: components["schemas"]["LugarDelPanel"][];
+        };
+        AbrirHorarioDto: {
+            /** @description El día, como `2026-10-14`. Sin hora: la grilla es por día. */
+            fecha: string;
+            lugarId: number;
+            /** @description Desde cuándo, en minutos: 1140 son las 19:00. */
+            desde: number;
+            /** @description Hasta cuándo, en minutos. 1440 es la medianoche del final del día. */
+            hasta: number;
         };
     };
     responses: never;
@@ -403,6 +474,85 @@ export interface operations {
             };
             /** @description El precio cambió desde que la clienta lo vio, el horario no está disponible, o se acaba de ocupar. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PanelController_verDia: {
+        parameters: {
+            query: {
+                /** @description El día, como `2026-10-14`. Sin hora: la grilla es por día. */
+                fecha: string;
+            };
+            header?: {
+                /** @description La clave del salón */
+                "x-clave-panel"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiaDelPanel"];
+                };
+            };
+            /** @description La fecha está mal formada. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Falta la clave o no es correcta. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PanelController_abrir: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description La clave del salón */
+                "x-clave-panel"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbrirHorarioDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiaDelPanel"];
+                };
+            };
+            /** @description El cuerpo está mal formado, el horario termina antes de empezar, o el lugar no es del salón. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Falta la clave o no es correcta. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

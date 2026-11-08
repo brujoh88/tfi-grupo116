@@ -25,7 +25,7 @@ calcula nada del negocio —pregunta—. El porqué está en el
 | `/armar` | Armar el turno, con el total en vivo | Hecha |
 | `/horario` | Elegir día y hora, con el calendario del celular | Hecha |
 | `/confirmar` | Nombre y teléfono, reservar, y el comprobante como aviso en la misma pantalla | Hecha |
-| — | Panel del salón, con su clave | Previsto |
+| `/panel` | Panel del salón: entrar con la clave, ver el día con sus turnos y abrir un horario | Hecha |
 
 Si se recarga la página en `/horario` o `/confirmar`, lo elegido se perdió (vive
 en memoria) y vuelve a `/armar`.

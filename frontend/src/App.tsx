@@ -4,6 +4,7 @@ import type { ArmarTurno, HorarioOfrecido, TurnoArmado } from './api/tipos.ts'
 import Armar from './pantallas/Armar.tsx'
 import Confirmar from './pantallas/Confirmar.tsx'
 import Horario from './pantallas/Horario.tsx'
+import Panel from './pantallas/Panel.tsx'
 
 // Una ruta por pantalla, para que "atrás" en el celular vuelva al paso anterior
 // en vez de sacar a la clienta del sitio.
@@ -43,6 +44,8 @@ export default function App() {
           )
         }
       />
+      {/* El panel del salón: aparte del recorrido de la clienta, con su clave. */}
+      <Route path="/panel" element={<Panel />} />
     </Routes>
   )
 }
