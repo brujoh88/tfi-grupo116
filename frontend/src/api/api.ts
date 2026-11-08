@@ -1,6 +1,14 @@
 // El único lugar del front que le habla a la API. Las pantallas llaman a estas
 // funciones y no saben de URLs, de `fetch` ni de cómo vienen los errores.
-import type { ArmarTurno, Catalogo, TurnoArmado } from './tipos'
+import type {
+  ArmarTurno,
+  Catalogo,
+  Comprobante,
+  ConsultarDisponibilidad,
+  Disponibilidad,
+  Reservar,
+  TurnoArmado,
+} from './tipos'
 
 // Dónde está la API: `localhost` para desarrollar, Railway en producción.
 const API_URL = import.meta.env.VITE_API_URL
@@ -39,3 +47,9 @@ export const pedirCatalogo = () => pedir<Catalogo>('/catalogo')
 
 export const armarTurno = (elegido: ArmarTurno) =>
   pedir<TurnoArmado>('/turnos/armado', elegido)
+
+export const consultarDisponibilidad = (consulta: ConsultarDisponibilidad) =>
+  pedir<Disponibilidad>('/disponibilidad', consulta)
+
+export const reservar = (pedido: Reservar) =>
+  pedir<Comprobante>('/reservas', pedido)

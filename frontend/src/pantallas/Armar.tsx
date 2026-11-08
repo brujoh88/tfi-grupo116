@@ -7,9 +7,11 @@ import { duracion, pesos } from '../formato.ts'
 interface Props {
   eleccion: ArmarTurno | null
   alElegir: (eleccion: ArmarTurno) => void
+  /** Al seguir, se lleva el turno con el total que María vio. */
+  alSeguir: (armado: TurnoArmado) => void
 }
 
-export default function Armar({ eleccion, alElegir }: Props) {
+export default function Armar({ eleccion, alElegir, alSeguir }: Props) {
   const [catalogo, setCatalogo] = useState<Catalogo | null>(null)
   const [error, setError] = useState<string | null>(null)
   // La última respuesta del armado, junto con la elección a la que corresponde.
@@ -131,7 +133,10 @@ export default function Armar({ eleccion, alElegir }: Props) {
           <button
             className="w-full rounded-lg bg-pink-600 p-3 font-medium text-white disabled:opacity-50"
             disabled={!armado}
-            onClick={() => navegar('/horario')}
+            onClick={() => {
+              alSeguir(armado!)
+              navegar('/horario')
+            }}
           >
             Elegir día y hora →
           </button>
