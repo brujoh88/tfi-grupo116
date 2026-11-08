@@ -51,6 +51,14 @@ anterior no le daba.
 problema que el salón todavía no tiene: el día que entren las profesionales, se
 agrega.
 
+## Qué se decidió después
+
+- **El panel solo abre horarios; cerrar queda fuera** (07/11). Es el recorte
+  previsto en el plan de contingencia (punto 4.5 de la propuesta), activado por
+  tiempo antes de la entrega final. Abrir es lo que el sistema anterior no
+  dejaba hacer, y por eso es lo que se conserva. La base ya guarda las dos
+  cosas (ADR-006): lo recortado es la pantalla y su endpoint, no el modelo.
+
 ## Relacionadas
 
 Cómo se guardan las aperturas y los cierres:

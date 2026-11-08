@@ -4,10 +4,16 @@ Trabajo Final Integrador — Tecnicatura Universitaria en Programación (UTN).
 
 Sistema de turnos para un salón de estética.
 
-**La API está online** y se prueba desde el navegador, con datos de ejemplo:
-**https://tfi-grupo116-production.up.railway.app/docs**. Corre en Railway, con la
-base en Neon. Si tarda en contestar la primera vez, es la base despertándose: se
-duerme tras unos minutos sin uso.
+**El sistema está online**, con datos de ejemplo inventados:
+
+- **Las pantallas de la clienta: https://tfi-grupo116.vercel.app** — pensadas
+  para el celular. Se arma un turno, se elige día y hora, y se reserva.
+- **La API: https://tfi-grupo116-production.up.railway.app/docs** — cada
+  endpoint se prueba desde ahí.
+
+Las pantallas corren en Vercel, la API en Railway y la base en Neon. Si la
+primera respuesta tarda unos segundos, es la base despertándose: se duerme tras
+unos minutos sin uso.
 
 ## El proyecto
 
@@ -26,6 +32,25 @@ La propuesta completa —problema, alcance, stack y plan de trabajo— está en
 El avance se sigue en el
 [tablero del proyecto](https://trello.com/b/uxJIQLjU): una tarjeta por pieza,
 etiquetada según la etapa de entrega a la que corresponde.
+
+## Limitaciones
+
+Lo que este sistema **no** hace, a propósito o por tiempo:
+
+- **No cobra seña.** El cobro con Mercado Pago quedó fuera del MVP
+  ([PDR-001](docs/pdr/001-la-sena-queda-fuera-del-mvp.md)).
+- **El panel del salón no está construido.** Abrir horarios puntuales es lo que
+  el salón más necesita y está modelado en la base (tabla `Excepcion`), pero
+  hoy solo se carga directo en la base, sin pantalla ni endpoint. Cerrar
+  horarios quedó recortado
+  ([PDR-003](docs/pdr/003-el-panel-abre-y-cierra-horarios-con-una-clave.md)).
+- **El comprobante es un aviso en la pantalla de confirmación**, no una
+  pantalla propia ni un archivo: hay que sacarle una captura. No hay forma de
+  volver a consultar una reserva.
+- **Lo que la clienta va eligiendo vive en memoria**: si recarga la página a
+  mitad del recorrido, vuelve al principio.
+- **Los datos son inventados**: el salón, su catálogo y su grilla salen de
+  `backend/prisma/seed.ts`.
 
 ## La documentación
 

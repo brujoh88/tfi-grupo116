@@ -47,7 +47,7 @@ descartadas.
 |---|---|
 | [001](pdr/001-la-sena-queda-fuera-del-mvp.md) | La seña por Mercado Pago queda fuera del MVP |
 | [002](pdr/002-el-turno-se-arma.md) | El turno se arma —servicio, extras y retiro—, no se elige de una lista |
-| [003](pdr/003-el-panel-abre-y-cierra-horarios-con-una-clave.md) | El panel abre y cierra horarios a mano, y se entra con una sola clave |
+| [003](pdr/003-el-panel-abre-y-cierra-horarios-con-una-clave.md) | El panel abre horarios a mano, con una sola clave (cerrar quedó recortado el 07/11) |
 | [004](pdr/004-el-turno-guarda-copia-del-precio.md) | El turno guarda copia del precio; el catálogo no se versiona |
 | [005](pdr/005-el-recurso-es-el-lugar.md) | Lo que limita los turnos es el lugar, no la persona |
 | [006](pdr/006-la-clienta-se-identifica-por-telefono.md) | La clienta se identifica por teléfono, sin registro y sin historial |
