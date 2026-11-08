@@ -8,6 +8,9 @@ Sistema de turnos para un salón de estética.
 
 - **Las pantallas de la clienta: https://tfi-grupo116.vercel.app** — pensadas
   para el celular. Se arma un turno, se elige día y hora, y se reserva.
+- **El panel del salón: https://tfi-grupo116.vercel.app/panel** — con la clave
+  del salón: el día con sus turnos, y abrir un horario fuera de la grilla. La
+  clave de demostración se comparte con el tutor por privado.
 - **La API: https://tfi-grupo116-production.up.railway.app/docs** — cada
   endpoint se prueba desde ahí.
 
@@ -39,11 +42,10 @@ Lo que este sistema **no** hace, a propósito o por tiempo:
 
 - **No cobra seña.** El cobro con Mercado Pago quedó fuera del MVP
   ([PDR-001](docs/pdr/001-la-sena-queda-fuera-del-mvp.md)).
-- **El panel del salón no está construido.** Abrir horarios puntuales es lo que
-  el salón más necesita y está modelado en la base (tabla `Excepcion`), pero
-  hoy solo se carga directo en la base, sin pantalla ni endpoint. Cerrar
-  horarios quedó recortado
+- **El panel solo abre horarios: cerrar quedó recortado**
   ([PDR-003](docs/pdr/003-el-panel-abre-y-cierra-horarios-con-una-clave.md)).
+  Tampoco mueve ni cancela turnos. Se entra con una sola clave del salón, sin
+  usuarios.
 - **El comprobante es un aviso en la pantalla de confirmación**, no una
   pantalla propia ni un archivo: hay que sacarle una captura. No hay forma de
   volver a consultar una reserva.
