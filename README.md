@@ -14,6 +14,13 @@ Sistema de turnos para un salón de estética.
 - **La API: https://tfi-grupo116-production.up.railway.app/docs** — cada
   endpoint se prueba desde ahí.
 
+**La entrega final**:
+
+- **El video: https://youtu.be/Aa5fl3OKrEw** — el problema, la demo y cómo
+  está construido, en 10 minutos. Hablado en castellano, con subtítulos en
+  inglés.
+- **El informe: [`docs/informe/informe.pdf`](docs/informe/informe.pdf)**.
+
 Las pantallas corren en Vercel, la API en Railway y la base en Neon. Si la
 primera respuesta tarda unos segundos, es la base despertándose: se duerme tras
 unos minutos sin uso.

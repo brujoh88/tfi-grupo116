@@ -21,7 +21,7 @@ lang: es-AR
 | **Repositorio** | <https://github.com/brujoh88/tfi-grupo116> |
 | **Sistema online** | <https://tfi-grupo116.vercel.app> (panel del salón: `/panel`) |
 | **API online** | <https://tfi-grupo116-production.up.railway.app/docs> |
-| **Video** | PENDIENTE — enlace al video |
+| **Video** | <https://youtu.be/Aa5fl3OKrEw> |
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
